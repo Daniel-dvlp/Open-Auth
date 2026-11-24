@@ -1,0 +1,78 @@
+# Escudo Yuma - entorno local completo. Uso:  cp .env.example .env  &&  docker compose up --build
+services:
+  api:
+    build: .
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_started }
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      Persistencia__Proveedor: postgres
+      Persistencia__Conexion: Host=postgres;Database=escudo_yuma;Username=escudo;Password=${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD en .env}
+      Redis__Conexion: redis:6379,password=${REDIS_PASSWORD:?defina REDIS_PASSWORD en .env}
+      Jwt__Clave: ${JWT_CLAVE:?defina JWT_CLAVE en .env}
+      Seguridad__ForzarHttps: "false"   # demo local sobre http; en produccion TLS lo termina el balanceador/ingress
+      Sandbox__UrlBase: http://sandbox:8080
+      Sandbox__ReplayHabilitado: "false"
+      Sandbox__RutaDatos: /caso/03_Datos
+      Sandbox__RutaReporte: /seed/replay_metricas.json
+      Seed__Habilitado: "true"
+      Seed__PermitirFueraDeDesarrollo: "true"   # demo con datos 100 % sinteticos; sin esta bandera el seed se niega a correr fuera de Development
+      ASPNETCORE_URLS: http://+:8080;http://+:9091
+      Seguridad__Metricas__Puerto: "9091"        # /metrics solo por este puerto interno (NO publicado); el 8080 devuelve 404 para /metrics
+      Seed__RutaClientes: /caso/03_Datos/clientes.csv
+      Seed__RutaSalida: /seed/usuarios_prueba.json
+    volumes:
+      - ../Caso_de_estudio_Yuma_Pay:/caso:ro
+      - ./seed:/seed
+    ports: ["8080:8080"]   # solo la API; 9091 (metricas) permanece interno a la red de compose
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+
+  postgres:
+    image: postgres:16.4-alpine
+    environment:
+      POSTGRES_DB: escudo_yuma
+      POSTGRES_USER: escudo
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD en .env}
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U escudo -d escudo_yuma"]
+      interval: 3s
+      retries: 20
+
+  redis:
+    image: redis:7.2.5-alpine
+    # Sin puertos publicados y con contrasena (solo la API, dentro de la red de compose, llega a Redis).
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?defina REDIS_PASSWORD en .env}
+    command: ["sh", "-c", "exec redis-server --requirepass \"$$REDIS_PASSWORD\""]
+
+  sandbox:   # mock_api.py del caso de estudio (el wrapper lo hace escuchar en 0.0.0.0 dentro de Docker)
+    image: python:3.12.5-slim
+    command: ["python", "/wrapper/run_sandbox.py", "--puerto", "8080", "--datos", "/caso/03_Datos"]
+    volumes:
+      - ../Caso_de_estudio_Yuma_Pay:/caso:ro
+      - ./ops/sandbox:/wrapper:ro
+    ports: ["127.0.0.1:8081:8080"]
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    volumes: ["./ops/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    ports: ["127.0.0.1:9090:9090"]
+    depends_on: [api]
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:?defina GRAFANA_PASSWORD en .env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - ./ops/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./ops/grafana/dashboards:/var/lib/grafana/dashboards:ro   # dashboard "Escudo Yuma - Operación" (provisionado)
+    ports: ["127.0.0.1:3000:3000"]
+    depends_on: [prometheus]
+
+volumes:
+  pgdata:

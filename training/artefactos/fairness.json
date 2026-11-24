@@ -1,0 +1,368 @@
+{
+ "departamento": {
+  "todas:retencion/rechazo": {
+   "ratio_max_min": Infinity,
+   "supera_1_25": true,
+   "tasa_min": 0.0,
+   "tasa_max": 0.02415679124886053,
+   "grupos_evaluados": 20,
+   "grupos_total": 20,
+   "tasas_por_grupo": {
+    "Antioquia": 0.01032,
+    "Atlántico": 0.00895,
+    "Bogotá D.C.": 0.01102,
+    "Bolívar": 0.00185,
+    "Boyacá": 0.01508,
+    "Caldas": 0.01055,
+    "Cauca": 0.00612,
+    "Cesar": 0.0,
+    "Cundinamarca": 0.02416,
+    "Córdoba": 0.00258,
+    "Huila": 0.00197,
+    "Magdalena": 0.00742,
+    "Meta": 0.0079,
+    "Nariño": 0.00088,
+    "Norte de Santander": 0.00496,
+    "Quindío": 0.00718,
+    "Risaralda": 0.00815,
+    "Santander": 0.01179,
+    "Tolima": 0.00235,
+    "Valle del Cauca": 0.0033
+   },
+   "n_por_grupo": {
+    "Antioquia": 5912,
+    "Atlántico": 2457,
+    "Bogotá D.C.": 8617,
+    "Bolívar": 1624,
+    "Boyacá": 1194,
+    "Caldas": 1043,
+    "Cauca": 817,
+    "Cesar": 816,
+    "Cundinamarca": 2194,
+    "Córdoba": 1164,
+    "Huila": 1015,
+    "Magdalena": 943,
+    "Meta": 1139,
+    "Nariño": 1137,
+    "Norte de Santander": 1410,
+    "Quindío": 975,
+    "Risaralda": 1227,
+    "Santander": 2374,
+    "Tolima": 1276,
+    "Valle del Cauca": 4241
+   }
+  },
+  "todas:desafio": {
+   "ratio_max_min": Infinity,
+   "supera_1_25": true,
+   "tasa_min": 0.0,
+   "tasa_max": 0.0071794871794871795,
+   "grupos_evaluados": 20,
+   "grupos_total": 20,
+   "tasas_por_grupo": {
+    "Antioquia": 0.00304,
+    "Atlántico": 0.00285,
+    "Bogotá D.C.": 0.00232,
+    "Bolívar": 0.00431,
+    "Boyacá": 0.00168,
+    "Caldas": 0.0,
+    "Cauca": 0.00245,
+    "Cesar": 0.00368,
+    "Cundinamarca": 0.00319,
+    "Córdoba": 0.00258,
+    "Huila": 0.00296,
+    "Magdalena": 0.00636,
+    "Meta": 0.00263,
+    "Nariño": 0.00264,
+    "Norte de Santander": 0.00213,
+    "Quindío": 0.00718,
+    "Risaralda": 0.00163,
+    "Santander": 0.00084,
+    "Tolima": 0.0,
+    "Valle del Cauca": 0.00236
+   },
+   "n_por_grupo": {
+    "Antioquia": 5912,
+    "Atlántico": 2457,
+    "Bogotá D.C.": 8617,
+    "Bolívar": 1624,
+    "Boyacá": 1194,
+    "Caldas": 1043,
+    "Cauca": 817,
+    "Cesar": 816,
+    "Cundinamarca": 2194,
+    "Córdoba": 1164,
+    "Huila": 1015,
+    "Magdalena": 943,
+    "Meta": 1139,
+    "Nariño": 1137,
+    "Norte de Santander": 1410,
+    "Quindío": 975,
+    "Risaralda": 1227,
+    "Santander": 2374,
+    "Tolima": 1276,
+    "Valle del Cauca": 4241
+   }
+  },
+  "legitimas:retencion/rechazo": {
+   "ratio_max_min": 1.0,
+   "supera_1_25": false,
+   "tasa_min": 0.0,
+   "tasa_max": 0.0,
+   "grupos_evaluados": 20,
+   "grupos_total": 20,
+   "tasas_por_grupo": {
+    "Antioquia": 0.0,
+    "Atlántico": 0.0,
+    "Bogotá D.C.": 0.0,
+    "Bolívar": 0.0,
+    "Boyacá": 0.0,
+    "Caldas": 0.0,
+    "Cauca": 0.0,
+    "Cesar": 0.0,
+    "Cundinamarca": 0.0,
+    "Córdoba": 0.0,
+    "Huila": 0.0,
+    "Magdalena": 0.0,
+    "Meta": 0.0,
+    "Nariño": 0.0,
+    "Norte de Santander": 0.0,
+    "Quindío": 0.0,
+    "Risaralda": 0.0,
+    "Santander": 0.0,
+    "Tolima": 0.0,
+    "Valle del Cauca": 0.0
+   },
+   "n_por_grupo": {
+    "Antioquia": 5828,
+    "Atlántico": 2426,
+    "Bogotá D.C.": 8497,
+    "Bolívar": 1610,
+    "Boyacá": 1173,
+    "Caldas": 1031,
+    "Cauca": 809,
+    "Cesar": 814,
+    "Cundinamarca": 2137,
+    "Córdoba": 1158,
+    "Huila": 1011,
+    "Magdalena": 928,
+    "Meta": 1128,
+    "Nariño": 1133,
+    "Norte de Santander": 1398,
+    "Quindío": 960,
+    "Risaralda": 1214,
+    "Santander": 2342,
+    "Tolima": 1273,
+    "Valle del Cauca": 4211
+   }
+  },
+  "legitimas:desafio": {
+   "ratio_max_min": Infinity,
+   "supera_1_25": true,
+   "tasa_min": 0.0,
+   "tasa_max": 0.002339728591483388,
+   "grupos_evaluados": 20,
+   "grupos_total": 20,
+   "tasas_por_grupo": {
+    "Antioquia": 0.00017,
+    "Atlántico": 0.0,
+    "Bogotá D.C.": 0.00012,
+    "Bolívar": 0.0,
+    "Boyacá": 0.0,
+    "Caldas": 0.0,
+    "Cauca": 0.0,
+    "Cesar": 0.00123,
+    "Cundinamarca": 0.00234,
+    "Córdoba": 0.0,
+    "Huila": 0.00099,
+    "Magdalena": 0.0,
+    "Meta": 0.00089,
+    "Nariño": 0.00088,
+    "Norte de Santander": 0.0,
+    "Quindío": 0.00104,
+    "Risaralda": 0.0,
+    "Santander": 0.0,
+    "Tolima": 0.0,
+    "Valle del Cauca": 0.00047
+   },
+   "n_por_grupo": {
+    "Antioquia": 5828,
+    "Atlántico": 2426,
+    "Bogotá D.C.": 8497,
+    "Bolívar": 1610,
+    "Boyacá": 1173,
+    "Caldas": 1031,
+    "Cauca": 809,
+    "Cesar": 814,
+    "Cundinamarca": 2137,
+    "Córdoba": 1158,
+    "Huila": 1011,
+    "Magdalena": 928,
+    "Meta": 1128,
+    "Nariño": 1133,
+    "Norte de Santander": 1398,
+    "Quindío": 960,
+    "Risaralda": 1214,
+    "Santander": 2342,
+    "Tolima": 1273,
+    "Valle del Cauca": 4211
+   }
+  }
+ },
+ "rango_edad": {
+  "todas:retencion/rechazo": {
+   "ratio_max_min": 2.4182250773257197,
+   "supera_1_25": true,
+   "tasa_min": 0.0043782837127845885,
+   "tasa_max": 0.01058767546990245,
+   "grupos_evaluados": 5,
+   "grupos_total": 5,
+   "tasas_por_grupo": {
+    "18-25": 0.00856,
+    "26-35": 0.00912,
+    "36-45": 0.01059,
+    "46-60": 0.00438,
+    "60+": 0.00718
+   },
+   "n_por_grupo": {
+    "18-25": 13090,
+    "26-35": 13701,
+    "36-45": 8406,
+    "46-60": 4568,
+    "60+": 1810
+   }
+  },
+  "todas:desafio": {
+   "ratio_max_min": 1.3932596685082874,
+   "supera_1_25": true,
+   "tasa_min": 0.0023792529145848203,
+   "tasa_max": 0.0033149171270718232,
+   "grupos_evaluados": 5,
+   "grupos_total": 5,
+   "tasas_por_grupo": {
+    "18-25": 0.0026,
+    "26-35": 0.00248,
+    "36-45": 0.00238,
+    "46-60": 0.00306,
+    "60+": 0.00331
+   },
+   "n_por_grupo": {
+    "18-25": 13090,
+    "26-35": 13701,
+    "36-45": 8406,
+    "46-60": 4568,
+    "60+": 1810
+   }
+  },
+  "legitimas:retencion/rechazo": {
+   "ratio_max_min": 1.0,
+   "supera_1_25": false,
+   "tasa_min": 0.0,
+   "tasa_max": 0.0,
+   "grupos_evaluados": 5,
+   "grupos_total": 5,
+   "tasas_por_grupo": {
+    "18-25": 0.0,
+    "26-35": 0.0,
+    "36-45": 0.0,
+    "46-60": 0.0,
+    "60+": 0.0
+   },
+   "n_por_grupo": {
+    "18-25": 12939,
+    "26-35": 13532,
+    "36-45": 8295,
+    "46-60": 4528,
+    "60+": 1787
+   }
+  },
+  "legitimas:desafio": {
+   "ratio_max_min": 2.533855623950756,
+   "supera_1_25": true,
+   "tasa_min": 0.00022084805653710247,
+   "tasa_max": 0.0005595970900951316,
+   "grupos_evaluados": 5,
+   "grupos_total": 5,
+   "tasas_por_grupo": {
+    "18-25": 0.00046,
+    "26-35": 0.00022,
+    "36-45": 0.00036,
+    "46-60": 0.00022,
+    "60+": 0.00056
+   },
+   "n_por_grupo": {
+    "18-25": 12939,
+    "26-35": 13532,
+    "36-45": 8295,
+    "46-60": 4528,
+    "60+": 1787
+   }
+  }
+ },
+ "tipo_cliente": {
+  "todas:retencion/rechazo": {
+   "ratio_max_min": 2.49715787936661,
+   "supera_1_25": true,
+   "tasa_min": 0.004380861113012526,
+   "tasa_max": 0.010939701846770006,
+   "grupos_evaluados": 2,
+   "grupos_total": 2,
+   "tasas_por_grupo": {
+    "microcomerciante": 0.00438,
+    "persona": 0.01094
+   },
+   "n_por_grupo": {
+    "microcomerciante": 14609,
+    "persona": 26966
+   }
+  },
+  "todas:desafio": {
+   "ratio_max_min": 2.7087814284654748,
+   "supera_1_25": true,
+   "tasa_min": 0.001232117188034773,
+   "tasa_max": 0.003337536156641697,
+   "grupos_evaluados": 2,
+   "grupos_total": 2,
+   "tasas_por_grupo": {
+    "microcomerciante": 0.00123,
+    "persona": 0.00334
+   },
+   "n_por_grupo": {
+    "microcomerciante": 14609,
+    "persona": 26966
+   }
+  },
+  "legitimas:retencion/rechazo": {
+   "ratio_max_min": 1.0,
+   "supera_1_25": false,
+   "tasa_min": 0.0,
+   "tasa_max": 0.0,
+   "grupos_evaluados": 2,
+   "grupos_total": 2,
+   "tasas_por_grupo": {
+    "microcomerciante": 0.0,
+    "persona": 0.0
+   },
+   "n_por_grupo": {
+    "microcomerciante": 14524,
+    "persona": 26557
+   }
+  },
+  "legitimas:desafio": {
+   "ratio_max_min": 1.82849077389149,
+   "supera_1_25": true,
+   "tasa_min": 0.0002635839891554016,
+   "tasa_max": 0.00048196089231616635,
+   "grupos_evaluados": 2,
+   "grupos_total": 2,
+   "tasas_por_grupo": {
+    "microcomerciante": 0.00048,
+    "persona": 0.00026
+   },
+   "n_por_grupo": {
+    "microcomerciante": 14524,
+    "persona": 26557
+   }
+  }
+ }
+}

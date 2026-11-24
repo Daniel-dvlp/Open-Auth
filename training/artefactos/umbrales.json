@@ -1,0 +1,28 @@
+{
+  "umbral_desafiar": 0.5657939314842224,
+  "umbral_retener": 0.9709348082542419,
+  "rechazo": {
+    "fanin_destino_7d_min": 3,
+    "reputacion_destino_max": 30.0,
+    "nota": "rechazar = p >= umbral_retener Y fanin >= min Y reputacion <= max (fijos a priori)"
+  },
+  "decision": {
+    "0": "aprobar",
+    "1": "desafiar",
+    "2": "retener",
+    "3": "rechazar"
+  },
+  "piso_reglas_seguridad": "ver politica.piso_reglas: la decision final es max(modelo, piso); parametros fijos a priori",
+  "criterio": {
+    "deteccion_global_min": 0.626,
+    "margen": 0.1,
+    "linea_base_min_por_modalidad": {
+      "toma_de_cuenta": 0.6043795620437956,
+      "sim_swapping": 0.8596491228070176,
+      "ingenieria_social": 0.14814814814814814,
+      "engano_qr": 0.3157894736842105,
+      "cuenta_mula": 0.872255489021956
+    },
+    "periodo_seleccion": "validacion 2026-09-01..2026-10-31"
+  }
+}

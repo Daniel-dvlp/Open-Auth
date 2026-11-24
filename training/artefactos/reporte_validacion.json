@@ -1,0 +1,248 @@
+{
+  "periodo": "validacion 2026-09-01..2026-10-31",
+  "n_tx": 41575,
+  "n_fraudes": 494,
+  "n_legitimas": 41081,
+  "umbrales": {
+    "desafiar": 0.5657939314842224,
+    "retener": 0.9709348082542419
+  },
+  "linea_base": {
+    "fp_pct": 91.67661097852029,
+    "deteccion_casos_pct": 56.477732793522264,
+    "deteccion_monto_pct": 80.11846418378533,
+    "deteccion_por_modalidad_pct": {
+      "toma_de_cuenta": 58.57740585774059,
+      "sim_swapping": 85.96491228070175,
+      "ingenieria_social": 12.658227848101266,
+      "engano_qr": 30.0,
+      "cuenta_mula": 86.07594936708861
+    },
+    "legitimas_bloqueadas_pct": 7.480343711204693,
+    "legitimas_desafiadas_pct": 0.0
+  },
+  "modelo_politica": {
+    "fp_pct": 0.0,
+    "deteccion_casos_pct": 90.68825910931174,
+    "deteccion_monto_pct": 93.65798577486316,
+    "deteccion_por_modalidad_pct": {
+      "toma_de_cuenta": 98.74476987447699,
+      "sim_swapping": 98.24561403508771,
+      "ingenieria_social": 75.9493670886076,
+      "engano_qr": 42.5,
+      "cuenta_mula": 100.0
+    },
+    "fraude_retenido_o_rechazado_pct": 72.67206477732793,
+    "legitimas_desafiadas_pct": 0.37243494559528734,
+    "legitimas_retenidas_pct": 0.0,
+    "legitimas_rechazadas_pct": 0.0,
+    "legitimas_bloqueadas_pct": 0.0,
+    "n_retenidas": 356,
+    "n_rechazadas": 3,
+    "n_desafiadas": 242,
+    "fp_en_rechazadas": 0
+  },
+  "proyeccion_1_en_10000": {
+    "peso_legitimas": 120.23821231226114,
+    "linea_base": {
+      "fp_pct": 99.92454790125407,
+      "deteccion_casos_pct": 56.477732793522264,
+      "deteccion_monto_pct": 80.11846418378533,
+      "deteccion_por_modalidad_pct": {
+        "toma_de_cuenta": 58.57740585774059,
+        "sim_swapping": 85.96491228070175,
+        "ingenieria_social": 12.658227848101266,
+        "engano_qr": 30.0,
+        "cuenta_mula": 86.07594936708861
+      },
+      "legitimas_bloqueadas_pct": 7.480343711204693,
+      "legitimas_desafiadas_pct": 0.0
+    },
+    "modelo_politica": {
+      "fp_pct": 0.0,
+      "deteccion_casos_pct": 90.68825910931174,
+      "deteccion_monto_pct": 93.65798577486316,
+      "deteccion_por_modalidad_pct": {
+        "toma_de_cuenta": 98.74476987447699,
+        "sim_swapping": 98.24561403508771,
+        "ingenieria_social": 75.9493670886076,
+        "engano_qr": 42.5,
+        "cuenta_mula": 100.0
+      },
+      "fraude_retenido_o_rechazado_pct": 72.67206477732793,
+      "legitimas_desafiadas_pct": 0.37243494559528734,
+      "legitimas_retenidas_pct": 0.0,
+      "legitimas_rechazadas_pct": 0.0,
+      "legitimas_bloqueadas_pct": 0.0,
+      "n_retenidas": 356,
+      "n_rechazadas": 3,
+      "n_desafiadas": 242,
+      "fp_en_rechazadas": 0
+    },
+    "supuesto": "legitimas re-ponderadas; fraudes y tasas de deteccion constantes"
+  },
+  "verificacion_fuera_de_muestra_octubre": {
+    "fp_pct": 0.0,
+    "deteccion_casos_pct": 88.52459016393442,
+    "deteccion_monto_pct": 90.79145054770908,
+    "deteccion_por_modalidad_pct": {
+      "toma_de_cuenta": 100.0,
+      "sim_swapping": 97.05882352941177,
+      "ingenieria_social": 67.3913043478261,
+      "engano_qr": 25.0,
+      "cuenta_mula": 100.0
+    },
+    "fraude_retenido_o_rechazado_pct": 74.18032786885246,
+    "legitimas_desafiadas_pct": 0.32777673721670725,
+    "legitimas_retenidas_pct": 0.0,
+    "legitimas_rechazadas_pct": 0.0,
+    "legitimas_bloqueadas_pct": 0.0,
+    "n_retenidas": 180,
+    "n_rechazadas": 1,
+    "n_desafiadas": 105,
+    "fp_en_rechazadas": 0,
+    "umbrales_elegidos_con_septiembre": {
+      "desafiar": 0.6693618297576904,
+      "retener": 0.9686999320983887
+    },
+    "linea_base_octubre": {
+      "fp_pct": 92.1399885255307,
+      "deteccion_casos_pct": 56.14754098360656,
+      "deteccion_monto_pct": 77.52298213727646,
+      "deteccion_por_modalidad_pct": {
+        "toma_de_cuenta": 60.150375939849624,
+        "sim_swapping": 88.23529411764706,
+        "ingenieria_social": 15.217391304347828,
+        "engano_qr": 37.5,
+        "cuenta_mula": 93.33333333333333
+      },
+      "legitimas_bloqueadas_pct": 7.52013485671474,
+      "legitimas_desafiadas_pct": 0.0
+    }
+  },
+  "modelo_sin_piso_con_eventos": {
+    "fp_pct": 0.0,
+    "deteccion_casos_pct": 90.48582995951418,
+    "deteccion_monto_pct": 93.5024661377246,
+    "deteccion_por_modalidad_pct": {
+      "toma_de_cuenta": 98.74476987447699,
+      "sim_swapping": 98.24561403508771,
+      "ingenieria_social": 74.68354430379746,
+      "engano_qr": 42.5,
+      "cuenta_mula": 100.0
+    },
+    "fraude_retenido_o_rechazado_pct": 72.67206477732793,
+    "legitimas_desafiadas_pct": 0.02677636863756968,
+    "legitimas_retenidas_pct": 0.0,
+    "legitimas_rechazadas_pct": 0.0,
+    "legitimas_bloqueadas_pct": 0.0,
+    "n_retenidas": 356,
+    "n_rechazadas": 3,
+    "n_desafiadas": 99,
+    "fp_en_rechazadas": 0
+  },
+  "feed_caido_sin_eventos": {
+    "fp_pct": 0.0,
+    "deteccion_casos_pct": 90.48582995951418,
+    "deteccion_monto_pct": 93.55730905103849,
+    "deteccion_por_modalidad_pct": {
+      "toma_de_cuenta": 98.32635983263597,
+      "sim_swapping": 98.24561403508771,
+      "ingenieria_social": 75.9493670886076,
+      "engano_qr": 42.5,
+      "cuenta_mula": 100.0
+    },
+    "fraude_retenido_o_rechazado_pct": 66.80161943319838,
+    "legitimas_desafiadas_pct": 0.37730337625666366,
+    "legitimas_retenidas_pct": 0.0,
+    "legitimas_rechazadas_pct": 0.0,
+    "legitimas_bloqueadas_pct": 0.0,
+    "n_retenidas": 328,
+    "n_rechazadas": 2,
+    "n_desafiadas": 272,
+    "fp_en_rechazadas": 0,
+    "solo_modelo_sin_piso": {
+      "fp_pct": 0.0,
+      "deteccion_casos_pct": 90.2834008097166,
+      "deteccion_monto_pct": 93.40178941389992,
+      "deteccion_por_modalidad_pct": {
+        "toma_de_cuenta": 98.32635983263597,
+        "sim_swapping": 98.24561403508771,
+        "ingenieria_social": 74.68354430379746,
+        "engano_qr": 42.5,
+        "cuenta_mula": 100.0
+      },
+      "fraude_retenido_o_rechazado_pct": 66.80161943319838,
+      "legitimas_desafiadas_pct": 0.029210583968257833,
+      "legitimas_retenidas_pct": 0.0,
+      "legitimas_rechazadas_pct": 0.0,
+      "legitimas_bloqueadas_pct": 0.0,
+      "n_retenidas": 328,
+      "n_rechazadas": 2,
+      "n_desafiadas": 128,
+      "fp_en_rechazadas": 0
+    }
+  },
+  "friccion_por_piso": {
+    "con_eventos": {
+      "A_dispositivo_nuevo_sim_o_clave": {
+        "sube_decision_en": 24,
+        "legitimas_desafiadas_extra": 24,
+        "legitimas_retenidas_extra": 0,
+        "fraudes_que_pasan_a_desafiar": 0,
+        "fraudes_que_pasan_a_retener": 0
+      },
+      "A_retener_vaciado_destino_nuevo": {
+        "sube_decision_en": 0,
+        "legitimas_desafiadas_extra": 0,
+        "legitimas_retenidas_extra": 0,
+        "fraudes_que_pasan_a_desafiar": 0,
+        "fraudes_que_pasan_a_retener": 0
+      },
+      "B_vaciado_transferencia": {
+        "sube_decision_en": 118,
+        "legitimas_desafiadas_extra": 117,
+        "legitimas_retenidas_extra": 0,
+        "fraudes_que_pasan_a_desafiar": 1,
+        "fraudes_que_pasan_a_retener": 0
+      },
+      "C_destino_reputacion_baja_fanin": {
+        "sube_decision_en": 1,
+        "legitimas_desafiadas_extra": 1,
+        "legitimas_retenidas_extra": 0,
+        "fraudes_que_pasan_a_desafiar": 0,
+        "fraudes_que_pasan_a_retener": 0
+      }
+    },
+    "feed_caido": {
+      "A_dispositivo_nuevo_sim_o_clave": {
+        "sube_decision_en": 25,
+        "legitimas_desafiadas_extra": 25,
+        "legitimas_retenidas_extra": 0,
+        "fraudes_que_pasan_a_desafiar": 0,
+        "fraudes_que_pasan_a_retener": 0
+      },
+      "A_retener_vaciado_destino_nuevo": {
+        "sube_decision_en": 0,
+        "legitimas_desafiadas_extra": 0,
+        "legitimas_retenidas_extra": 0,
+        "fraudes_que_pasan_a_desafiar": 0,
+        "fraudes_que_pasan_a_retener": 0
+      },
+      "B_vaciado_transferencia": {
+        "sube_decision_en": 118,
+        "legitimas_desafiadas_extra": 117,
+        "legitimas_retenidas_extra": 0,
+        "fraudes_que_pasan_a_desafiar": 1,
+        "fraudes_que_pasan_a_retener": 0
+      },
+      "C_destino_reputacion_baja_fanin": {
+        "sube_decision_en": 1,
+        "legitimas_desafiadas_extra": 1,
+        "legitimas_retenidas_extra": 0,
+        "fraudes_que_pasan_a_desafiar": 0,
+        "fraudes_que_pasan_a_retener": 0
+      }
+    }
+  }
+}

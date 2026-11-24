@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>EscudoYuma.Api.Tests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
+    <PackageReference Include="xunit" Version="2.*" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.*" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.*" />
+  </ItemGroup>
+  <!-- Fixtures de paridad generados por training/ (Python): se copian junto a los artefactos que ya trae la API. -->
+  <ItemGroup>
+    <Content Include="..\..\training\artefactos\paridad.csv" Link="artefactos\paridad.csv" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\training\artefactos\fixture_atributos.csv" Link="artefactos\fixture_atributos.csv" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\training\artefactos\fixture_atributos_sin_eventos.csv" Link="artefactos\fixture_atributos_sin_eventos.csv" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\training\artefactos\reporte_validacion.json" Link="artefactos\reporte_validacion.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\EscudoYuma.Api\EscudoYuma.Api.csproj" />
+  </ItemGroup>
+</Project>

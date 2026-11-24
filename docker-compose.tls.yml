@@ -1,0 +1,14 @@
+# TLS de desarrollo en la API (Kestrel escucha tambien en https://localhost:8443). Requiere ops/tls/escudo-dev.pfx y TLS_PFX_PASSWORD en .env:
+#   dotnet dev-certs https -ep ops/tls/escudo-dev.pfx -p <clave-aleatoria>      (certificado de desarrollo, autofirmado; NO es para produccion)
+# Se activa junto al compose base con COMPOSE_FILE=docker-compose.yml:docker-compose.tls.yml (en .env) o con  -f docker-compose.yml -f docker-compose.tls.yml
+# El puerto 8080 (http) se mantiene porque Prometheus raspa http://api:8080/metrics dentro de la red de compose; en produccion el
+# http se cierra/redirige en el ingress y se usa Seguridad__ForzarHttps=true (HSTS + redireccion).
+services:
+  api:
+    environment:
+      ASPNETCORE_URLS: http://+:8080;http://+:9091;https://+:8443
+      ASPNETCORE_Kestrel__Certificates__Default__Path: /tls/escudo-dev.pfx
+      ASPNETCORE_Kestrel__Certificates__Default__Password: ${TLS_PFX_PASSWORD:?defina TLS_PFX_PASSWORD en .env}
+    volumes:
+      - ./ops/tls:/tls:ro
+    ports: ["8443:8443"]

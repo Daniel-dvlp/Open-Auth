@@ -1,0 +1,125 @@
+{
+  "generado_utc": "2026-11-21T16:25:12.965Z",
+  "perfil": {
+    "sostenida": "150 it/s x 60 s",
+    "pico": "300 it/s x 15 s (desde los 65 s)",
+    "mezcla": "90 % score / 10 % login"
+  },
+  "duracion_s": 80.50925079599999,
+  "iteraciones": 13500,
+  "peticiones": 13501,
+  "rps_promedio": 167.6950147531466,
+  "latencia_http": {
+    "p50_ms": 7.106836,
+    "p90_ms": 17.654346,
+    "p95_ms": 22.136011,
+    "p99_ms": 42.808358,
+    "max_ms": 541.093618,
+    "avg_ms": 9.792978188578658
+  },
+  "latencia_score": {
+    "p50_ms": 6.7774925,
+    "p90_ms": 11.6690468,
+    "p95_ms": 14.494966599999994,
+    "p99_ms": 32.686651880000014,
+    "max_ms": 250.955912,
+    "avg_ms": 8.295939737037042
+  },
+  "latencia_login": {
+    "p50_ms": 19.8756445,
+    "p90_ms": 32.01882680000001,
+    "p95_ms": 39.016686949999986,
+    "p99_ms": 58.642576349999985,
+    "max_ms": 129.740282,
+    "avg_ms": 22.87276822296295
+  },
+  "latencia_sostenida": {
+    "p50_ms": 7.745529,
+    "p90_ms": 17.957963200000002,
+    "p95_ms": 23.998170799999986,
+    "p99_ms": 42.80853621,
+    "max_ms": 250.955912,
+    "avg_ms": 10.400880518333313
+  },
+  "latencia_pico": {
+    "p50_ms": 6.2135555,
+    "p90_ms": 17.178762399999997,
+    "p95_ms": 19.801067500000002,
+    "p99_ms": 39.96380145000014,
+    "max_ms": 108.408955,
+    "avg_ms": 8.459106720222215
+  },
+  "latencia_login_sostenida": {
+    "p50_ms": 21.6478505,
+    "p90_ms": 35.862649100000006,
+    "p95_ms": 41.993637799999995,
+    "p99_ms": 59.42750002,
+    "max_ms": 129.740282,
+    "avg_ms": 24.178151746666618
+  },
+  "latencia_login_pico": {
+    "p50_ms": 18.877842,
+    "p90_ms": 23.321181300000003,
+    "p95_ms": 26.658940999999977,
+    "p99_ms": 54.22055755999998,
+    "max_ms": 108.408955,
+    "avg_ms": 20.26200117555556
+  },
+  "latencia_score_sostenida": {
+    "p50_ms": 7.365707499999999,
+    "p90_ms": 12.419554200000002,
+    "p95_ms": 15.272475599999986,
+    "p99_ms": 31.198458020000135,
+    "max_ms": 250.955912,
+    "avg_ms": 8.87007260407405
+  },
+  "latencia_score_pico": {
+    "p50_ms": 6.028034,
+    "p90_ms": 9.0359895,
+    "p95_ms": 11.581588549999998,
+    "p99_ms": 36.17079507999958,
+    "max_ms": 84.833404,
+    "avg_ms": 7.147674002962969
+  },
+  "http_req_failed_rate": 0,
+  "checks_ok_rate": 1,
+  "iteraciones_descartadas": 0,
+  "decisiones": {
+    "aprobar": 11258,
+    "desafiar": 522,
+    "retener": 351,
+    "rechazar": 19
+  },
+  "thresholds": {
+    "http_req_duration{scenario:pico,tipo:login}": {
+      "p(99)<300": true
+    },
+    "http_req_duration": {
+      "p(99)<300": true
+    },
+    "http_req_duration{scenario:sostenida}": {
+      "p(99)<300": true
+    },
+    "http_req_duration{scenario:sostenida,tipo:score}": {
+      "p(99)<300": true
+    },
+    "http_req_duration{scenario:pico,tipo:score}": {
+      "p(99)<300": true
+    },
+    "http_req_duration{tipo:score}": {
+      "p(99)<300": true
+    },
+    "http_req_duration{tipo:login}": {
+      "p(99)<300": true
+    },
+    "http_req_failed": {
+      "rate<0.01": true
+    },
+    "http_req_duration{scenario:sostenida,tipo:login}": {
+      "p(99)<300": true
+    },
+    "http_req_duration{scenario:pico}": {
+      "p(99)<300": true
+    }
+  }
+}

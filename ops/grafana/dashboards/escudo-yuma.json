@@ -1,0 +1,65 @@
+{
+  "uid": "escudo-yuma-ops",
+  "title": "Escudo Yuma - Operación",
+  "tags": ["escudo-yuma"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-30m", "to": "now" },
+  "panels": [
+    {
+      "id": 1, "type": "timeseries", "title": "Latencia p50 por endpoint (s)",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [ { "refId": "A", "legendFormat": "{{metodo}} {{endpoint}}",
+        "expr": "histogram_quantile(0.50, sum by (le, endpoint, metodo) (rate(yuma_http_latencia_segundos_bucket[1m])))" } ]
+    },
+    {
+      "id": 2, "type": "timeseries", "title": "Latencia p99 por endpoint (s)",
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "s", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 0.3 } ] }, "custom": { "thresholdsStyle": { "mode": "line" } } }, "overrides": [] },
+      "targets": [ { "refId": "A", "legendFormat": "{{metodo}} {{endpoint}}",
+        "expr": "histogram_quantile(0.99, sum by (le, endpoint, metodo) (rate(yuma_http_latencia_segundos_bucket[1m])))" } ]
+    },
+    {
+      "id": 3, "type": "timeseries", "title": "Decisiones por tipo (por segundo)",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 9 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "ops", "custom": { "stacking": { "mode": "normal" }, "fillOpacity": 30 } }, "overrides": [] },
+      "targets": [ { "refId": "A", "legendFormat": "{{decision}}", "expr": "sum by (decision) (rate(yuma_decisiones_total[1m]))" } ]
+    },
+    {
+      "id": 4, "type": "timeseries", "title": "Tasa de retenciones (% de las decisiones)",
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 9 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0 }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "legendFormat": "retener", "expr": "sum(rate(yuma_decisiones_total{decision=\"retener\"}[1m])) / clamp_min(sum(rate(yuma_decisiones_total[1m])), 1e-9)" },
+        { "refId": "B", "legendFormat": "retener o rechazar", "expr": "sum(rate(yuma_decisiones_total{decision=~\"retener|rechazar\"}[1m])) / clamp_min(sum(rate(yuma_decisiones_total[1m])), 1e-9)" }
+      ]
+    },
+    {
+      "id": 5, "type": "stat", "title": "Decisiones (acumulado)",
+      "gridPos": { "h": 5, "w": 8, "x": 0, "y": 18 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "legendFormat": "{{decision}}", "expr": "sum by (decision) (yuma_decisiones_total)" } ]
+    },
+    {
+      "id": 6, "type": "timeseries", "title": "Latencia interna de scoring p99 (ms)",
+      "gridPos": { "h": 5, "w": 8, "x": 8, "y": 18 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "targets": [ { "refId": "A", "legendFormat": "p99", "expr": "histogram_quantile(0.99, sum by (le) (rate(yuma_scoring_latencia_ms_bucket[1m])))" } ]
+    },
+    {
+      "id": 7, "type": "timeseries", "title": "Logins por resultado (por segundo)",
+      "gridPos": { "h": 5, "w": 8, "x": 16, "y": 18 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
+      "targets": [ { "refId": "A", "legendFormat": "{{resultado}}", "expr": "sum by (resultado) (rate(yuma_login_total[1m]))" } ]
+    }
+  ]
+}

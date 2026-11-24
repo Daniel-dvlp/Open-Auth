@@ -1,0 +1,31 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+TestResults/
+*.log
+# Python
+.venv/
+__pycache__/
+*.pyc
+# Datos de prueba con claves (nunca versionar)
+seed/usuarios_prueba.json
+# Secretos
+*.pfx
+appsettings.Production.json
+.env
+# Artefactos pesados (modelos entrenados/datos derivados)
+*.onnx
+# el modelo entrenado viaja con la app (se copia al output)
+!training/artefactos/modelo_tx.onnx
+*.parquet
+*.pkl
+*.joblib
+training/data/
+training/artifacts/
+load/usuarios_carga.json
+reports/k6_resumen_*.tmp
+ops/tls/
+seed/usuarios_carga_seed.json
+.pytest_cache/

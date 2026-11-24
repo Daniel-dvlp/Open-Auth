@@ -1,0 +1,13 @@
+{
+  "min_desde_cambio_sim": 1034.9166259765625,
+  "min_desde_cambio_clave": 5.483333110809326,
+  "min_desde_registro_dispositivo": 15.266666412353516,
+  "metodo": "mediana de minutos en fraudes de entrenamiento con la bandera=1 y el evento presente en su ventana",
+  "n_fraudes_usados": {
+    "min_desde_cambio_sim": 123,
+    "min_desde_cambio_clave": 323,
+    "min_desde_registro_dispositivo": 474
+  },
+  "periodo": "2026-05-15..2026-09-01",
+  "regla": "bandera=1 y min_desde_* > ventana (sim 2880, clave 1440, registro 1440) -> min_desde_* = valor; dispositivo_nuevo=1 ademas fija dispositivo_visto_antes=0"
+}

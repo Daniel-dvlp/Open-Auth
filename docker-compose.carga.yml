@@ -1,0 +1,17 @@
+# Perfil de CARGA (solo pruebas con k6; NO usar en produccion):
+#   docker compose -f docker-compose.yml -f docker-compose.carga.yml up -d --build api
+#   (primera vez: siembra ~6.000 usuarios sinteticos en una base APARTE, escudo_yuma_carga; la de desarrollo no se toca)
+# Ajustes respecto a la configuracion normal, y por que:
+#  * Base de datos aparte con su propio seed (usuarios_carga_seed.json): permite hashes de clave mas baratos sin tocar los usuarios de dev.
+#  * Seguridad__Hash__Iteraciones=10000: PBKDF2 por defecto cuesta ~100 ms de CPU por login; 30 logins/s en el pico ocupan varios nucleos y
+#    esa CPU, no la API, fija el p99 de TODA la prueba. Solo afecta a los usuarios sinteticos de esta base.
+#  * Seguridad__Login__MaxIntentosPorIp alto: k6 envia todas las peticiones desde una sola IP (la del contenedor), asi que el tope por IP
+#    (30 / 5 min) invalidaria la prueba. El tope POR LLAVE (5 / 5 min) sigue activo: k6 reparte los logins entre 1000 llaves.
+services:
+  api:
+    environment:
+      Persistencia__Conexion: Host=postgres;Database=escudo_yuma_carga;Username=escudo;Password=${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD en .env}
+      Seed__RutaSalida: /seed/usuarios_carga_seed.json
+      Seguridad__PerfilCarga: "true"            # SIN esta bandera la API se niega a arrancar con Iteraciones personalizadas
+      Seguridad__Hash__Iteraciones: "10000"
+      Seguridad__Login__MaxIntentosPorIp: "100000"

@@ -1,0 +1,124 @@
+{
+  "generado_utc": "2026-11-24T19:20:46.3533789Z",
+  "transacciones_procesadas": 120972,
+  "duracion_s": 51.4,
+  "tx_por_segundo": 2353.3,
+  "decisiones": {
+    "aprobar": 118928,
+    "desafiar": 721,
+    "rechazar": 20,
+    "retener": 1303
+  },
+  "metricas_sandbox_periodo_completo": {
+    "transacciones_decididas": 120972,
+    "transacciones_pendientes": 0,
+    "fraudes_en_lo_decidido": 1704,
+    "fraude_detectado_pct": 94.66,
+    "monto_fraude_protegido_pct": 97.34,
+    "falsos_positivos_pct": 0.06,
+    "clientes_legitimos_bloqueados_pct": 0.0,
+    "desafios": 721,
+    "latencia_ms_p50": 2.8,
+    "latencia_ms_p99": 11.6,
+    "nota": "Detectado = fraude con decisión desafiar, retener o rechazar. Falso positivo = operación legítima retenida o rechazada. La latencia se mide desde la entrega de la transacción hasta la decisión."
+  },
+  "metricas_locales_sep_oct": {
+    "periodo": "2026-09-01..2026-10-31",
+    "n_tx": 41575,
+    "n_fraudes": 494,
+    "n_legitimas": 41081,
+    "fp_pct": 0,
+    "fp_pct_sandbox": 0,
+    "deteccion_casos_pct": 90.68825910931174,
+    "deteccion_monto_pct": 93.65798577486316,
+    "deteccion_por_modalidad_pct": {
+      "toma_de_cuenta": 98.74476987447699,
+      "sim_swapping": 98.24561403508773,
+      "ingenieria_social": 75.9493670886076,
+      "engano_qr": 42.5,
+      "cuenta_mula": 100
+    },
+    "fraude_retenido_o_rechazado_pct": 72.67206477732793,
+    "legitimas_desafiadas_pct": 0.37243494559528734,
+    "legitimas_retenidas_pct": 0,
+    "legitimas_rechazadas_pct": 0,
+    "legitimas_bloqueadas_pct": 0,
+    "n_retenidas": 356,
+    "n_rechazadas": 3,
+    "n_desafiadas": 242,
+    "fp_en_rechazadas": 0
+  },
+  "latencias_internas": {
+    "transacciones": 120972,
+    "scoring_interno_ms_p50": 0.072,
+    "scoring_interno_ms_p99": 0.157,
+    "scoring_interno_ms_max": 8.624,
+    "pipeline_total_ms_p50": 0.165,
+    "pipeline_total_ms_p99": 1.071,
+    "nota": "scoring_interno = estado + atributos + ONNX + politica + razones (Stopwatch); pipeline_total suma auditoria y alerta. La latencia del sandbox mide entrega->decision: incluye la espera del lote y el POST de cada lote.",
+    "lote_tamano": 10,
+    "prefetch_lotes": 0
+  },
+  "referencia_python_sep_oct": {
+    "linea_base": {
+      "fp_pct": 91.67661097852029,
+      "deteccion_casos_pct": 56.477732793522264,
+      "deteccion_monto_pct": 80.11846418378533,
+      "deteccion_por_modalidad_pct": {
+        "toma_de_cuenta": 58.57740585774059,
+        "sim_swapping": 85.96491228070175,
+        "ingenieria_social": 12.658227848101266,
+        "engano_qr": 30.0,
+        "cuenta_mula": 86.07594936708861
+      },
+      "legitimas_bloqueadas_pct": 7.480343711204693,
+      "legitimas_desafiadas_pct": 0.0
+    },
+    "modelo_politica": {
+      "fp_pct": 0.0,
+      "deteccion_casos_pct": 90.68825910931174,
+      "deteccion_monto_pct": 93.65798577486316,
+      "deteccion_por_modalidad_pct": {
+        "toma_de_cuenta": 98.74476987447699,
+        "sim_swapping": 98.24561403508771,
+        "ingenieria_social": 75.9493670886076,
+        "engano_qr": 42.5,
+        "cuenta_mula": 100.0
+      },
+      "fraude_retenido_o_rechazado_pct": 72.67206477732793,
+      "legitimas_desafiadas_pct": 0.37243494559528734,
+      "legitimas_retenidas_pct": 0.0,
+      "legitimas_rechazadas_pct": 0.0,
+      "legitimas_bloqueadas_pct": 0.0,
+      "n_retenidas": 356,
+      "n_rechazadas": 3,
+      "n_desafiadas": 242,
+      "fp_en_rechazadas": 0
+    }
+  },
+  "diferencia_vs_python": {
+    "fp_pct": 0,
+    "deteccion_casos_pct": 0,
+    "deteccion_monto_pct": 0,
+    "fraude_retenido_o_rechazado_pct": 0,
+    "legitimas_desafiadas_pct": 0,
+    "legitimas_retenidas_pct": 0,
+    "legitimas_rechazadas_pct": 0,
+    "n_retenidas": 0,
+    "n_rechazadas": 0,
+    "n_desafiadas": 0,
+    "fp_en_rechazadas": 0,
+    "deteccion_por_modalidad_pct": {
+      "toma_de_cuenta": 0,
+      "sim_swapping": 0,
+      "ingenieria_social": 0,
+      "engano_qr": 0,
+      "cuenta_mula": 0
+    }
+  },
+  "gates": {
+    "fp_sep_oct_menor_60_pct": true,
+    "deteccion_sep_oct_mayor_o_igual_linea_base": true,
+    "latencia_interna_p99_menor_300_ms": true
+  }
+}
