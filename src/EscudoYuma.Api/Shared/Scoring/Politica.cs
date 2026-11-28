@@ -60,7 +60,8 @@ public sealed class UmbralesDecision
 public readonly record struct ContextoPolitica(
     double FanInDestino, double ReputacionDestino, bool DestinoNuevo, double MontoSobreSaldo,
     bool SenalesDeCuenta, double? ScoreIngreso, bool CuentaBloqueada,
-    bool DispositivoNuevo = false, bool CambioSimOClave = false, bool EsSalida = false, bool EsTransferencia = false, double MontoCop = 0)
+    bool DispositivoNuevo = false, bool CambioSimOClave = false, bool EsSalida = false, bool EsTransferencia = false, double MontoCop = 0,
+    bool EsPagoQr = false)
 {
     /// <param name="scoreIngreso">Score de ingreso vigente de la sesión (null si no hay). NO es atributo del modelo.</param>
     public static ContextoPolitica Desde(AtributosTransaccion a, double? scoreIngreso, bool cuentaBloqueada) => new(
@@ -71,7 +72,7 @@ public readonly record struct ContextoPolitica(
         // señales de la PROPIA transacción para el piso de reglas de seguridad (no dependen del feed de eventos)
         a["dispositivo_nuevo"] == 1, a["cambio_sim_48h"] == 1 || a["cambio_clave_24h"] == 1,
         a["op_transferencia_inmediata"] == 1 || a["op_retiro_corresponsal"] == 1 || a["op_retiro_cajero"] == 1,
-        a["op_transferencia_inmediata"] == 1, a["monto_cop"]);
+        a["op_transferencia_inmediata"] == 1, a["monto_cop"], a["op_pago_qr"] == 1);
 }
 
 /// <summary>Regla de seguridad que elevó la decisión del modelo (Ninguno = el piso no cambió nada).</summary>
@@ -123,6 +124,19 @@ public sealed class PoliticaDecision(UmbralesDecision umbrales)
         if (c.ReputacionDestino <= u.PisoReputacionMax && c.FanInDestino >= u.PisoFanInMin) return (NivelInterno.Verificar, PisoSeguridad.DestinoReputacionBaja);
         return (NivelInterno.Aprobar, PisoSeguridad.Ninguno);
     }
+
+    /// <summary>
+    /// Revisión posterior: un "desafiar" SIN señales de toma de cuenta (dispositivo, SIM, clave, ingresos fallidos ni ingreso riesgoso) en una
+    /// transferencia o pago QR abre un caso para el analista. La biometría confirma QUIÉN opera, no si lo están engañando: en ingeniería social
+    /// y engaño QR la propia víctima la supera y el dinero sale. La decisión no cambia (la operación sigue su curso tras la verificación).
+    /// Medido en validación sep-oct 2026: ~3 casos/día extra con 36 % de precisión; cubre 48/79 de ingeniería social y 17/40 de engaño QR.
+    /// </summary>
+    public static bool AbreRevisionPosterior(ResultadoPolitica res, ContextoPolitica c) =>
+        res.Nivel is NivelInterno.Advertir or NivelInterno.Verificar && !res.EscaladaPorIngreso && !c.SenalesDeCuenta && !c.CuentaBloqueada
+        && (c.EsTransferencia || c.EsPagoQr);
+
+    public const string MotivoRevisionPosterior =
+        "Revisión posterior: el patrón es de estafa con la propia víctima operando (la verificación biométrica no lo evita); confirme con el cliente.";
 
     /// <summary>Texto de la razón cuando el piso eleva la decisión (comienza con "Regla de seguridad:").</summary>
     public static string MotivoPiso(PisoSeguridad piso) => piso switch
