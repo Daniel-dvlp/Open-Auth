@@ -411,6 +411,9 @@ dialog::backdrop { background: rgba(9, 21, 29, .6); backdrop-filter: blur(3px); 
 .demo-entry span:last-child { font-size: 13px; font-weight: 400; }
 .demo-caption { margin: -2px 0 0; color: #9ba7a0; font-size: 7px; line-height: 1.5; }
 .button-spinner { width: 13px; height: 13px; border: 2px solid rgba(255,255,255,.35); border-top-color: white; border-radius: 50%; animation: spin .7s linear infinite; }
+.wallet-entry-link { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding: 10px 12px; color: #176b60; border: 1px solid #dcebe5; border-radius: 7px; background: #f4faf7; text-decoration: none; font-size: 11px; font-weight: 600; transition: background .18s ease, border-color .18s ease; }
+.wallet-entry-link:hover { background: #eaf5ef; border-color: #c7e1d6; }
+.wallet-entry-link span { font-size: 15px; }
 .login-security { display: flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 18px; color: #9ba6a1; font-size: 8px; }
 .lock-icon { color: #6a9b83; font-size: 13px; }
 .login-art { position: relative; display: flex; flex-direction: column; justify-content: center; min-height: 500px; overflow: hidden; color: white; background: radial-gradient(ellipse at 49% 38%,#31545a 0,#213b47 38%,#162937 76%); }

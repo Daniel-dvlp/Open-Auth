@@ -116,13 +116,15 @@ async function mockApi(path, options = {}) {
   const url = new URL(path, location.origin);
   if (url.pathname === '/v1/alertas' && options.method !== 'POST') {
     const requestedState = url.searchParams.get('estado') || 'pendiente';
-    const alerts = demoAlerts.filter(alert => alert.estado === requestedState);
+    let walletAlerts = [];
+    try { walletAlerts = JSON.parse(localStorage.getItem('yuma-wallet-local-demo-v1') || '{}').alertas || []; }
+    catch { walletAlerts = []; }
+    const alerts = [...walletAlerts, ...demoAlerts].filter(alert => alert.estado === requestedState);
     return { total: alerts.length, alertas: alerts.map(({ ...alert }) => alert) };
   }
   if (url.pathname.startsWith('/v1/cuentas/') && url.pathname.endsWith('/reputacion')) {
     const idCuenta = decodeURIComponent(url.pathname.split('/')[3]);
-    if (!demoReputations[idCuenta]) throw new Error('Cuenta de ejemplo no encontrada. Prueba con CLI-YM-0084 o selecciona una cuenta de la cola demo.');
-    return { id_cuenta: idCuenta, ...(demoReputations[idCuenta] || { puntaje: 0, reputacion: 100, senales: [], bloqueo_definitivo: false }), actualizado_utc: new Date().toISOString() };
+    return { id_cuenta: idCuenta, ...(demoReputations[idCuenta] || { puntaje: 12, reputacion: 88, senales: ['operación de demostración'], bloqueo_definitivo: false }), actualizado_utc: new Date().toISOString() };
   }
   if (url.pathname === '/v1/score/transaccion' && options.method === 'POST') {
     const tx = JSON.parse(options.body || '{}');
@@ -163,13 +165,21 @@ async function mockApi(path, options = {}) {
   if (url.pathname === '/v1/sandbox/replay' && options.method !== 'POST') return { ...demoReplay };
   const resolver = url.pathname.match(/^\/v1\/alertas\/([^/]+)\/resolver$/);
   if (resolver && options.method === 'POST') {
-    const alert = demoAlerts.find(item => item.id === resolver[1]);
+    let walletDemo = null;
+    let alert = demoAlerts.find(item => item.id === resolver[1]);
+    if (!alert) {
+      try {
+        walletDemo = JSON.parse(localStorage.getItem('yuma-wallet-local-demo-v1') || '{}');
+        alert = walletDemo.alertas?.find(item => item.id === resolver[1]);
+      } catch { walletDemo = null; }
+    }
     if (!alert || alert.estado !== 'pendiente') throw new Error('La alerta de ejemplo ya fue resuelta.');
     const request = JSON.parse(options.body || '{}');
     alert.estado = 'resuelta';
     alert.resolucion = request.resolucion;
     alert.accion = request.accion;
     alert.bloqueo_definitivo = request.accion === 'bloquear_cuenta';
+    if (walletDemo) localStorage.setItem('yuma-wallet-local-demo-v1', JSON.stringify(walletDemo));
     if (alert.bloqueo_definitivo && demoReputations[alert.id_cliente]) demoReputations[alert.id_cliente].bloqueo_definitivo = true;
     return { id_alerta: alert.id, estado: 'resuelta', resolucion: request.resolucion, accion: request.accion, puntaje_reputacion: demoReputations[alert.id_cliente]?.puntaje || 0, bloqueo_definitivo: alert.bloqueo_definitivo };
   }
@@ -739,6 +749,9 @@ $('#resolution-close').addEventListener('click', () => $('#resolution-dialog').c
 $('#resolution-dialog').addEventListener('close', () => document.body.classList.remove('has-modal'));
 $('#login-dialog').addEventListener('close', () => document.body.classList.remove('has-modal'));
 document.querySelectorAll('.nav-item').forEach(link => link.addEventListener('click', event => { event.preventDefault(); setView(link.dataset.view); }));
+window.addEventListener('storage', event => {
+  if (event.key === 'yuma-wallet-local-demo-v1' && state.demo && state.token) loadAlerts({ quiet: true });
+});
 $('#score-form').addEventListener('submit', submitScore);
 $('#score-reset').addEventListener('click', setScoreExample);
 $('#account-form').addEventListener('submit', submitAccountLookup);

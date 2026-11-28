@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#142d35" />
+    <meta name="description" content="Billetera Yuma Pay, experiencia de demostración conectada al motor Escudo Yuma." />
+    <title>Yuma Pay · Billetera digital</title>
+    <link rel="stylesheet" href="/billetera.css" />
+    <script src="/billetera.js" defer></script>
+  </head>
+  <body class="yb-body">
+    <main id="auth-view" class="yb-auth-view">
+      <header class="yb-auth-header">
+        <a class="yb-brand" href="/billetera" aria-label="Yuma Pay, inicio">
+          <span class="yb-brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M16 3.5 26 7v8.1c0 6.1-4.2 10.8-10 13.4C10.2 25.9 6 21.2 6 15.1V7l10-3.5Z"/><path d="m11.3 15.8 3.1 3.1 6.5-6.6"/></svg></span>
+          <span><strong>yuma</strong><small>PAY · BILLETERA</small></span>
+        </a>
+        <a class="yb-text-link" href="/">Consola de analista <span aria-hidden="true">↗</span></a>
+      </header>
+
+      <div class="yb-auth-layout">
+        <section class="yb-welcome-panel" aria-labelledby="welcome-title">
+          <div class="yb-welcome-orbit yb-orbit-one" aria-hidden="true"></div>
+          <div class="yb-welcome-orbit yb-orbit-two" aria-hidden="true"></div>
+          <p class="yb-eyebrow"><span class="yb-status-dot"></span> BILLETERA DIGITAL DE DEMOSTRACIÓN</p>
+          <h1 id="welcome-title">Tu plata,<br />en buenas manos.</h1>
+          <p class="yb-welcome-copy">Envía dinero y sigue cada movimiento con una protección que trabaja en segundo plano.</p>
+          <div class="yb-protection-note"><span class="yb-protection-icon" aria-hidden="true">✳</span><span><strong>Una transferencia, antes de salir</strong><small>Escudo Yuma evalúa cada operación antes de mover el saldo.</small></span></div>
+          <div class="yb-welcome-footer"><span>YUMA PAY</span><span>01 / 03</span></div>
+        </section>
+
+        <section class="yb-login-panel" aria-labelledby="login-title">
+          <div class="yb-login-heading"><p class="yb-eyebrow yb-eyebrow-dark">ACCESO A TU CUENTA</p><h2 id="login-title">Qué bueno verte.</h2><p>Ingresa con los datos de prueba de tu billetera.</p></div>
+          <form id="login-form" class="yb-form" novalidate>
+            <label class="yb-field"><span>Tu celular Yuma</span><div class="yb-input-wrap"><span class="yb-input-prefix" aria-hidden="true">+57</span><input id="login-phone" name="llave" type="tel" inputmode="numeric" autocomplete="username" placeholder="300 000 0001" maxlength="15" required aria-describedby="phone-hint" /></div><small id="phone-hint" class="yb-field-hint">Celular de prueba de 10 dígitos.</small></label>
+            <label class="yb-field"><span>Clave</span><input id="login-password" name="clave" type="password" autocomplete="current-password" placeholder="Escribe tu clave" maxlength="128" required /></label>
+            <label class="yb-field"><span>Departamento de conexión</span><select id="login-department" name="departamento_ip" required><option>Antioquia</option><option>Bogotá D.C.</option><option>Valle del Cauca</option><option>Atlántico</option><option>Santander</option><option>Cundinamarca</option><option>Otro</option></select><small class="yb-field-hint">Elige el departamento del usuario de prueba.</small></label>
+            <label class="yb-field"><span>Dispositivo</span><select id="login-os" name="sistema_operativo"><option value="Android">Android</option><option value="iOS">iOS</option></select><small class="yb-field-hint">La web representa la app móvil para esta prueba.</small></label>
+            <div id="login-error" class="yb-form-message" role="alert" aria-live="polite"></div>
+            <button id="login-submit" class="yb-button yb-button-primary yb-button-wide" type="submit"><span>Entrar a Yuma Pay</span><span aria-hidden="true">→</span></button>
+          </form>
+          <button id="wallet-demo-entry" class="yb-button yb-button-secondary yb-button-wide yb-demo-entry" type="button">Entrar sin credenciales · demo local</button>
+          <div class="yb-login-note"><span aria-hidden="true">⌑</span><span>Las credenciales se generan al iniciar el entorno y están en <code>seed/billetera_usuarios_prueba.json</code>. No uses información personal.</span></div>
+          <div class="yb-data-note"><span class="yb-status-dot"></span> Cuenta de demostración · datos sintéticos</div>
+        </section>
+      </div>
+    </main>
+
+    <div id="wallet-view" class="yb-app-view" hidden>
+      <aside class="yb-sidebar" aria-label="Navegación principal">
+        <a class="yb-brand yb-brand-inverse" href="/billetera" aria-label="Yuma Pay, inicio">
+          <span class="yb-brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M16 3.5 26 7v8.1c0 6.1-4.2 10.8-10 13.4C10.2 25.9 6 21.2 6 15.1V7l10-3.5Z"/><path d="m11.3 15.8 3.1 3.1 6.5-6.6"/></svg></span>
+          <span><strong>yuma</strong><small>PAY · BILLETERA</small></span>
+        </a>
+        <p class="yb-side-caption">TU ESPACIO</p>
+        <nav class="yb-nav">
+          <button class="yb-nav-item is-active" type="button" data-page="home"><span class="yb-nav-icon" aria-hidden="true">⌂</span>Inicio</button>
+          <button class="yb-nav-item" type="button" data-page="activity"><span class="yb-nav-icon" aria-hidden="true">◷</span>Movimientos</button>
+          <button class="yb-nav-item" type="button" data-page="transfer"><span class="yb-nav-icon" aria-hidden="true">↗</span>Enviar dinero</button>
+        </nav>
+        <div class="yb-sidebar-bottom"><div class="yb-shield-card"><span class="yb-shield-emblem" aria-hidden="true">✳</span><strong>Siempre alerta</strong><small>Tu cuenta está protegida en cada operación.</small></div><a class="yb-analyst-link" href="/">Ir a la consola de Escudo <span aria-hidden="true">↗</span></a></div>
+      </aside>
+
+      <div class="yb-main-column">
+        <header class="yb-topbar"><div><p class="yb-topbar-label">YUMA PAY <span>/</span> <strong id="breadcrumb-label">INICIO</strong></p></div><div class="yb-topbar-right"><span id="wallet-session-label" class="yb-session-chip"><i class="yb-status-dot"></i> CUENTA YUMA</span><button id="logout-button" class="yb-avatar-button" type="button" aria-label="Cerrar sesión" title="Cerrar sesión">Y</button></div></header>
+        <div id="wallet-demo-banner" class="yb-demo-banner" hidden><strong>Estás en una simulación local.</strong><span>No usa credenciales ni consulta el modelo o las API. Los casos de riesgo se comparten con la consola demo en este navegador.</span><button id="reset-wallet-demo" type="button">Reiniciar demo</button></div>
+
+        <main class="yb-content">
+          <section id="home-page" class="yb-page" aria-labelledby="home-title">
+            <div class="yb-page-heading"><div><p class="yb-eyebrow yb-eyebrow-dark">TU CUENTA · <span id="today-label"></span></p><h1 id="home-title">Hola, <span id="greeting-name">bienvenido</span>.</h1><p>Este es el resumen de tu billetera hoy.</p></div><button id="refresh-home" class="yb-icon-button" type="button" aria-label="Actualizar saldo y movimientos" title="Actualizar">↻</button></div>
+
+            <div class="yb-dashboard-grid">
+              <section class="yb-balance-card" aria-label="Saldo disponible">
+                <div class="yb-balance-top"><span>DINERO DISPONIBLE</span><span class="yb-balance-live"><i class="yb-status-dot"></i> AL DÍA</span></div>
+                <strong id="available-balance" class="yb-balance-value">—</strong>
+                <div class="yb-balance-bottom"><span>Cuenta Yuma Pay</span><span id="masked-account">•••• ••••</span></div>
+                <span class="yb-balance-shape" aria-hidden="true"></span>
+              </section>
+              <section class="yb-reserve-card"><div class="yb-card-symbol" aria-hidden="true">⌑</div><div><p>En revisión</p><strong id="reserved-balance">—</strong><small>Si una operación se revisa, este monto sigue en tu cuenta.</small></div></section>
+            </div>
+
+            <section class="yb-quick-panel" aria-label="Acciones de la billetera"><div><p class="yb-eyebrow yb-eyebrow-dark">¿QUÉ NECESITAS HACER?</p><h2>Mover dinero es simple.</h2></div><button class="yb-button yb-button-primary" type="button" data-go="transfer"><span>Enviar dinero</span><span aria-hidden="true">→</span></button></section>
+
+            <section class="yb-activity-card" aria-labelledby="recent-title"><div class="yb-section-heading"><div><p class="yb-eyebrow yb-eyebrow-dark">TU ACTIVIDAD</p><h2 id="recent-title">Movimientos recientes</h2></div><button type="button" class="yb-text-button" data-go="activity">Ver todos <span aria-hidden="true">→</span></button></div><div id="home-movements" class="yb-movement-list"><div class="yb-empty-state">Cargando tus movimientos…</div></div></section>
+
+            <footer class="yb-page-footer"><span>✳ Yuma Pay · protegida por Escudo Yuma</span><span>Montos en pesos colombianos</span></footer>
+          </section>
+
+          <section id="transfer-page" class="yb-page" aria-labelledby="transfer-title" hidden>
+            <div class="yb-page-heading"><div><p class="yb-eyebrow yb-eyebrow-dark">TRANSFERENCIA YUMA A YUMA</p><h1 id="transfer-title">Enviar dinero</h1><p>Elige a quién y cuánto. Te mostraremos el resultado antes de terminar.</p></div><button type="button" class="yb-back-button" data-go="home"><span aria-hidden="true">←</span> Volver</button></div>
+            <div class="yb-transfer-layout">
+              <section class="yb-transfer-card"><form id="transfer-form" class="yb-form" novalidate>
+                <label class="yb-field"><span>Celular de quien recibe</span><div class="yb-input-wrap"><span class="yb-input-prefix" aria-hidden="true">+57</span><input id="transfer-phone" name="llave" type="tel" inputmode="numeric" autocomplete="off" placeholder="300 000 0002" maxlength="15" required aria-describedby="transfer-phone-hint" /></div><small id="transfer-phone-hint" class="yb-field-hint">Usa un celular Yuma de prueba, distinto al tuyo.</small></label>
+                <label class="yb-field"><span>¿Cuánto quieres enviar?</span><div class="yb-money-input"><span aria-hidden="true">$</span><input id="transfer-amount" name="monto_cop" type="number" inputmode="numeric" min="1" step="1" placeholder="0" required /><small>COP</small></div><small class="yb-field-hint">Disponible: <strong id="transfer-available">—</strong></small></label>
+                <label class="yb-field"><span>Nota <small>(opcional)</small></span><input id="transfer-description" name="descripcion" type="text" maxlength="80" placeholder="Ej. Almuerzo" /></label>
+                <div id="transfer-error" class="yb-form-message" role="alert" aria-live="polite"></div>
+                <button id="transfer-submit" class="yb-button yb-button-primary yb-button-wide" type="submit"><span>Continuar</span><span aria-hidden="true">→</span></button>
+                <p class="yb-transaction-note"><span aria-hidden="true">⌑</span> La operación se revisa antes de mover el dinero. Nunca te pediremos transferir a una “cuenta segura”.</p>
+                <button id="prepare-wallet-demo" class="yb-text-button yb-demo-prepare" type="button" hidden>Preparar escenario de revisión →</button>
+                <p id="wallet-demo-tip" class="yb-demo-tip" hidden>En el modo demo, el envío de un monto alto a un destino nuevo genera un caso para revisar en la consola.</p>
+              </form></section>
+              <aside class="yb-transfer-aside"><div class="yb-aside-icon" aria-hidden="true">✳</div><p class="yb-eyebrow yb-eyebrow-dark">PROTECCIÓN YUMA</p><h2>Un momento de verificación puede cuidarte.</h2><p>Según la operación, podríamos pedirte una confirmación. Si queda en revisión, tu dinero se mantiene en la cuenta mientras el equipo la analiza.</p><div class="yb-aside-rule"></div><div class="yb-aside-fact"><span class="yb-fact-mark">01</span><span><strong>Antes de enviar</strong><small>Comprobamos que la operación tenga sentido.</small></span></div><div class="yb-aside-fact"><span class="yb-fact-mark">02</span><span><strong>Tú mantienes el control</strong><small>La decisión y su estado siempre se muestran con claridad.</small></span></div></aside>
+            </div>
+            <section id="transfer-receipt" class="yb-receipt-card" aria-live="polite" hidden></section>
+          </section>
+
+          <section id="activity-page" class="yb-page" aria-labelledby="activity-title" hidden>
+            <div class="yb-page-heading"><div><p class="yb-eyebrow yb-eyebrow-dark">TU CUENTA</p><h1 id="activity-title">Movimientos</h1><p>Consulta las operaciones recientes de tu billetera.</p></div><button id="refresh-activity" class="yb-icon-button" type="button" aria-label="Actualizar movimientos" title="Actualizar">↻</button></div>
+            <section class="yb-activity-card yb-full-activity"><div class="yb-section-heading"><div><p class="yb-eyebrow yb-eyebrow-dark">HISTORIAL DE CUENTA</p><h2>Últimas operaciones</h2></div><span class="yb-period-chip">Hora de Colombia</span></div><div id="all-movements" class="yb-movement-list"><div class="yb-empty-state">Cargando movimientos…</div></div><button id="load-more" class="yb-button yb-button-secondary yb-button-wide" type="button" hidden>Ver anteriores</button></section>
+            <footer class="yb-page-footer"><span>✳ Yuma Pay · protegida por Escudo Yuma</span><span>Montos en pesos colombianos</span></footer>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <dialog id="auth-verification" class="yb-dialog" aria-labelledby="auth-verification-title">
+      <form id="otp-form" class="yb-dialog-card" novalidate>
+        <button class="yb-dialog-close" type="button" data-close="auth-verification" aria-label="Cerrar">×</button><span class="yb-dialog-mark" aria-hidden="true">⌑</span><p class="yb-eyebrow yb-eyebrow-dark">CONFIRMACIÓN DE INGRESO</p><h2 id="auth-verification-title">Revisemos que seas tú.</h2><p id="auth-verification-copy" class="yb-dialog-copy">Ingresa el código enviado al celular de prueba.</p>
+        <label id="otp-field" class="yb-field"><span>Código de 6 dígitos</span><input id="otp-code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="000000" /></label>
+        <button id="dev-otp-button" class="yb-text-button yb-dev-code-button" type="button" hidden>Consultar código de prueba</button><p id="dev-otp-result" class="yb-dev-code" aria-live="polite"></p>
+        <div id="otp-error" class="yb-form-message" role="alert" aria-live="polite"></div><button id="otp-submit" class="yb-button yb-button-primary yb-button-wide" type="submit"><span>Confirmar código</span><span aria-hidden="true">→</span></button>
+      </form>
+    </dialog>
+
+    <dialog id="login-biometric" class="yb-dialog" aria-labelledby="login-biometric-title">
+      <section class="yb-dialog-card"><button class="yb-dialog-close" type="button" data-close="login-biometric" aria-label="Cerrar">×</button><span class="yb-dialog-mark" aria-hidden="true">◎</span><p class="yb-eyebrow yb-eyebrow-dark">VERIFICACIÓN FACIAL DE PRUEBA</p><h2 id="login-biometric-title">Confirma tu identidad.</h2><p id="login-biometric-copy" class="yb-dialog-copy">La verificación facial está simulada en este entorno.</p><div id="login-biometric-error" class="yb-form-message" role="alert" aria-live="polite"></div><div class="yb-dialog-actions"><button class="yb-button yb-button-secondary" type="button" data-login-biometric="no_supera">No coincide</button><button id="login-biometric-approve" class="yb-button yb-button-primary" type="button" data-login-biometric="supera">Sí, soy yo</button></div></section>
+    </dialog>
+
+    <dialog id="transfer-biometric" class="yb-dialog" aria-labelledby="transfer-biometric-title">
+      <section class="yb-dialog-card"><button class="yb-dialog-close" type="button" data-close="transfer-biometric" aria-label="Cerrar">×</button><span class="yb-dialog-mark" aria-hidden="true">◎</span><p class="yb-eyebrow yb-eyebrow-dark">CONFIRMA ESTA TRANSFERENCIA</p><h2 id="transfer-biometric-title">Un paso más.</h2><p id="transfer-biometric-copy" class="yb-dialog-copy">La verificación facial es simulada para esta demostración.</p><div id="transfer-biometric-error" class="yb-form-message" role="alert" aria-live="polite"></div><div class="yb-dialog-actions"><button class="yb-button yb-button-secondary" type="button" data-transfer-biometric="no_supera">No coincide</button><button id="transfer-biometric-approve" class="yb-button yb-button-primary" type="button" data-transfer-biometric="supera">Sí, soy yo</button></div></section>
+    </dialog>
+
+    <div id="wallet-toast" class="yb-toast" role="status" aria-live="polite"></div>
+  </body>
+</html>

@@ -85,8 +85,10 @@ public sealed class ManejadorEvaluarTransaccion(
         //    este pipeline NUNCA crea ese bloqueo. El score de ingreso de la sesión NO es atributo del modelo: solo escala la política.
         var bloqueada = bloqueos.Contiene(tx.IdCliente);
         var scoreIngreso = estado.ScoreIngresoVigente(tx.IdCliente, ahoraUtc, TimeSpan.FromMinutes(politica.Umbrales.VigenciaScoreIngresoMin));
-        var res = politica.Decidir(p, ContextoPolitica.Desde(attrs, scoreIngreso, bloqueada));
+        var ctxPolitica = ContextoPolitica.Desde(attrs, scoreIngreso, bloqueada);
+        var res = politica.Decidir(p, ctxPolitica);
         var nivel = res.Nivel;
+        var revisionPosterior = PoliticaDecision.AbreRevisionPosterior(res, ctxPolitica);
         var decision = PoliticaDecision.Mapear(nivel);
 
         // 4) Razones legibles (nunca vacías)
@@ -121,6 +123,7 @@ public sealed class ManejadorEvaluarTransaccion(
             if (res.EscaladaPorIngreso) normas.Add("ESC-INGRESO");
             if (decision == "desafiar") normas.Add("NORMA-AUTENTICACION-REFORZADA");
             if (bloqueada) normas.Add("NORMA-BLOQUEO-ANALISTA");
+            if (revisionPosterior) normas.Add("NORMA-REVISION-POSTERIOR");
             expediente.Registrar(TiposHecho.Decision, FuentesHecho.Escudo, tx.IdCliente, tx.IdTransaccion, new
             {
                 decision, decision_interna = PoliticaDecision.NombreInterno(nivel), puntaje = Math.Round(p, 6), version_modelo = modelo.Version,
@@ -130,18 +133,21 @@ public sealed class ManejadorEvaluarTransaccion(
             }, normas, contexto.IdCorrelacion, eslabon, fechaNegocioUtc);
         }
 
-        if (nivel >= NivelInterno.Retener)
+        // Alerta: retener/rechazar, o "desafiar" con patrón de estafa sin señales de toma de cuenta (revisión posterior; la decisión no cambia)
+        if (nivel >= NivelInterno.Retener || revisionPosterior)
         {
             if (!await db.Alertas.AnyAsync(a => a.IdTransaccion == tx.IdTransaccion, ct))
             {
+                var razonesAlerta = revisionPosterior ? razones.Prepend(PoliticaDecision.MotivoRevisionPosterior).ToList() : razones.ToList();
                 var alerta = new Alerta
                 {
                     IdTransaccion = tx.IdTransaccion, IdCliente = tx.IdCliente, MontoCop = tx.MontoCop, Puntaje = p,
-                    Decision = decision, Razones = razones.ToList(), CreadaUtc = ahoraUtc,
+                    Decision = decision, Razones = razonesAlerta, CreadaUtc = ahoraUtc,
                 };
                 db.Alertas.Add(alerta);
                 await db.SaveChangesAsync(ct);
-                var eslabonAlerta = await auditoria.RegistrarAsync("alerta_creada", "alertas", new { id_alerta = alerta.Id, id_transaccion = tx.IdTransaccion, decision }, ct: ct);
+                var eslabonAlerta = await auditoria.RegistrarAsync("alerta_creada", "alertas",
+                    new { id_alerta = alerta.Id, id_transaccion = tx.IdTransaccion, decision, origen = revisionPosterior ? "revision_posterior" : "decision" }, ct: ct);
                 if (conExpediente)
                 {
                     expediente.Registrar(TiposHecho.Alerta, FuentesHecho.Escudo, tx.IdCliente, tx.IdTransaccion,

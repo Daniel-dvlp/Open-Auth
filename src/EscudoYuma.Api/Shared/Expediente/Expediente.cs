@@ -62,6 +62,7 @@ public static class CatalogoNormas
         new("PISO-DESTINO-REPUTACION", "Piso de seguridad", "Destino que recibe de muchos remitentes distintos y tiene reputación baja."),
         new("ESC-INGRESO", "Escalamiento por ingreso riesgoso", "Un ingreso riesgoso sube una aprobación a verificación; nunca baja una decisión."),
         new("NORMA-AUTENTICACION-REFORZADA", "Autenticación reforzada", "Riesgo medio: biometría facial; si no la supera, el caso pasa a un analista."),
+        new("NORMA-REVISION-POSTERIOR", "Revisión posterior por patrón de estafa", "Riesgo medio sin señales de toma de cuenta: tras la verificación la operación sigue, pero el caso pasa a un analista."),
         new("NORMA-BLOQUEO-ANALISTA", "Supervisión humana", "Un bloqueo definitivo de cuenta siempre requiere la revisión de un analista."),
         new("NORMA-CADENA-AUDITORIA", "Integridad de la auditoría", "La bitácora es append-only con hash SHA-256 encadenado; cualquier alteración se detecta."),
         new("NORMA-DATOS-PERSONALES", "Protección de datos (Ley 1581 de 2012 y Ley 1266 de 2008)", "Sin datos personales en claro; no se decide por región, edad ni nivel de ingresos."),

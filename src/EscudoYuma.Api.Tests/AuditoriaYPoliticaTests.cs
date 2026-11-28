@@ -56,6 +56,25 @@ public class PoliticaDecisionTests
     }
 
     [Fact]
+    public void Revision_posterior_solo_en_desafiar_sin_senales_de_cuenta_en_transferencia_o_qr()
+    {
+        ContextoPolitica C(bool senales = false, bool transf = true, bool qr = false, bool bloqueada = false) =>
+            new(0, 100, true, 0.6, senales, null, bloqueada, EsSalida: transf, EsTransferencia: transf, MontoCop: 500_000, EsPagoQr: qr);
+        bool Abre(double p, ContextoPolitica c) => PoliticaDecision.AbreRevisionPosterior(Politica.Decidir(p, c), c);
+
+        Assert.True(Abre(0.7, C()));                              // ingeniería social: la víctima supera la biometría
+        Assert.True(Abre(0.7, C(transf: false, qr: true)));       // engaño QR
+        Assert.False(Abre(0.7, C(senales: true)));                // toma de cuenta: la biometría sí detiene al ladrón
+        Assert.False(Abre(0.7, C(transf: false)));                // retiro u otra operación
+        Assert.False(Abre(0.3, C()));                             // aprobar
+        Assert.False(Abre(0.99, C()));                            // retener ya crea su alerta
+        Assert.False(Abre(0.7, C(bloqueada: true)));              // rechazar por bloqueo
+        // ingreso riesgoso que escala un aprobar: es señal de cuenta, no de estafa
+        var esc = new ContextoPolitica(0, 100, true, 0.6, false, 0.9, false, EsTransferencia: true);
+        Assert.False(PoliticaDecision.AbreRevisionPosterior(Politica.Decidir(0.3, esc), esc));
+    }
+
+    [Fact]
     public void Desafiar_se_parte_en_advertir_y_verificar_segun_las_senales()
     {
         // destino nuevo + monto casi igual al saldo, sin señales de cuenta -> anti-ingeniería social
