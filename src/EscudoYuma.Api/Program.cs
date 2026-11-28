@@ -2,19 +2,21 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Text.Json;
 using EscudoYuma.Api.Features.Salud;
 using EscudoYuma.Api.Shared.Auditoria;
-using EscudoYuma.Api.Shared.Features;
 using EscudoYuma.Api.Shared.Observabilidad;
+using EscudoYuma.Api.Shared.Expediente;
+using EscudoYuma.Api.Shared.Notificaciones;
 using EscudoYuma.Api.Shared.Persistencia;
 using EscudoYuma.Api.Shared.Seguridad;
 using Prometheus;
 
 // Program.cs solo compone: servicios transversales + features (vertical slice) + middlewares.
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.UsarLogsJson(builder.Configuration);
 
 builder.WebHost.ConfigureKestrel(k =>
 {
     k.AddServerHeader = false;
-    k.Limits.MaxRequestBodySize = SeguridadExtensions.MaxCuerpoBytes;                    // 1 MiB: un lote de 1.000 eventos pesa ~300 KB
+    k.Limits.MaxRequestBodySize = WebExtensions.MaxCuerpoBytes;                    // 1 MiB: un lote de 1.000 eventos pesa ~300 KB
     k.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(15);
     k.Limits.MaxRequestHeadersTotalSize = 16_384;
 });
@@ -36,7 +38,9 @@ builder.Services.AddSeguridad();
 builder.Services.AddProxiesConfiables();
 builder.Services.AddHsts(o => { o.MaxAge = TimeSpan.FromDays(365); o.IncludeSubDomains = true; });
 if (builder.Configuration["Redis:Conexion"] is { Length: > 0 } redis) builder.Services.AddRedisOpcional(redis);
-builder.Services.AddFeatures();
+builder.Services.AddNotificacionesBilletera();
+builder.Services.AddExpediente();
+builder.Services.AddFeatures(typeof(Program).Assembly);
 
 var app = builder.Build();
 
@@ -54,7 +58,7 @@ app.UseCabecerasSeguras();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapFeatures();
+app.MapFeatures(typeof(Program).Assembly);
 app.MapMetrics("/metrics").AllowAnonymous(); // solo por el puerto interno Seguridad:Metricas:Puerto (ver UsePuertoMetricas)
 
 app.Run();

@@ -123,9 +123,13 @@ public sealed class SeederUsuarios(EscudoDbContext db, IPasswordHasher<Usuario> 
         });
 
         var extra = new List<(Usuario U, Credencial C)>();
+        // Seed:ClaveServicio (opcional, solo por variable de entorno): clave fija de servicio01 para que otro servicio del entorno de demo
+        // (la billetera) pueda autenticarse sin leer este archivo. Se exige longitud mínima; nunca se escribe en logs.
+        var claveServicio = cfg["Seed:ClaveServicio"];
+        if (claveServicio is { Length: > 0 and < 16 }) throw new InvalidOperationException("Seed:ClaveServicio debe tener al menos 16 caracteres.");
         foreach (var (llave, rol) in new[] { ("analista01", Roles.Analista), ("analista02", Roles.Analista), ("servicio01", Roles.Servicio) })
         {
-            var clave = ClaveAleatoria();
+            var clave = rol == Roles.Servicio && !string.IsNullOrEmpty(claveServicio) ? claveServicio : ClaveAleatoria();
             var u = NuevoUsuario("STAFF-" + llave, llave, clave, rol, null, null);
             u.Dispositivos.Add(new DispositivoConocido { UsuarioId = u.Id, IdDispositivo = "DISP-" + llave, RegistradoUtc = ahora });
             extra.Add((u, new Credencial(u.IdCliente, llave, clave, "DISP-" + llave, rol)));

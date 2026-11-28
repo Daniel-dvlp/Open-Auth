@@ -1,0 +1,106 @@
+### Billetera Yuma — recorrido completo (VS Code REST Client / JetBrains HTTP Client)
+### Credenciales de prueba: seed/billetera_usuarios_prueba.json (llave, clave, id_dispositivo, departamento).
+@billetera = http://localhost:8082
+@escudo = http://localhost:8080
+@llave = 3000000001
+@clave = <clave de seed/billetera_usuarios_prueba.json>
+@dispositivo = D19CE9F2
+@depto = Antioquia
+
+### 1. Ingreso
+# @name login
+POST {{billetera}}/v1/auth/login
+Content-Type: application/json
+
+{ "llave": "{{llave}}", "clave": "{{clave}}", "id_dispositivo": "{{dispositivo}}", "departamento_ip": "{{depto}}", "sistema_operativo": "Android" }
+
+### Si resultado = verificacion_requerida con metodo = otp: leer el "SMS" (solo Development) y confirmar
+GET {{billetera}}/v1/dev/otp/{{login.response.body.verificacion.id_verificacion}}
+
+###
+POST {{billetera}}/v1/auth/otp
+Content-Type: application/json
+
+{ "id_verificacion": "{{login.response.body.verificacion.id_verificacion}}", "codigo": "000000" }
+
+@token = {{login.response.body.token}}
+
+### 2. Saldo y movimientos
+GET {{billetera}}/v1/cuentas/me
+Authorization: Bearer {{token}}
+
+###
+GET {{billetera}}/v1/cuentas/me/movimientos?limite=10
+Authorization: Bearer {{token}}
+
+### 3. Transferencia inmediata a una llave Yuma
+# @name transferencia
+POST {{billetera}}/v1/transferencias
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Idempotency-Key: demo-transferencia-001
+
+{ "llave": "3000000002", "monto_cop": 25000, "descripcion": "Almuerzo" }
+
+### Seguimiento
+GET {{billetera}}/v1/transferencias/{{transferencia.response.body.id_transaccion}}
+Authorization: Bearer {{token}}
+
+### Si quedó requiere_verificacion: biometría facial simulada (supera | no_supera)
+POST {{billetera}}/v1/transferencias/{{transferencia.response.body.id_transaccion}}/biometria
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "id_verificacion": "{{transferencia.response.body.verificacion.id_verificacion}}", "resultado_simulado": "supera" }
+
+### 4. Pagos y recargas (códigos con el formato de los datos del caso)
+POST {{billetera}}/v1/pagos/qr
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Idempotency-Key: demo-qr-001
+
+{ "codigo_comercio": "COM0412", "monto_cop": 18000 }
+
+###
+POST {{billetera}}/v1/pagos/servicios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Idempotency-Key: demo-servicio-001
+
+{ "id_servicio": "SRV07", "referencia_pago": "778899001", "monto_cop": 64000 }
+
+###
+POST {{billetera}}/v1/recargas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Idempotency-Key: demo-recarga-001
+
+{ "id_operador": "OPE03", "celular": "3105551234", "monto_cop": 10000 }
+
+### 5. Destinatario de otra entidad
+POST {{billetera}}/v1/destinatarios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "alias": "Arriendo", "tipo_destino": "otra_entidad", "entidad": "Banco X", "numero_producto": "0012345678" }
+
+### 6. Simular duplicación de SIM (solo Development)
+POST {{billetera}}/v1/dev/cambio-sim
+Content-Type: application/json
+
+{ "id_cliente": "C00003" }
+
+### 7. Analista (Escudo): expediente y narrativa de una alerta
+@tokenAnalista = <token de analista01 desde POST {{escudo}}/v1/auth/login>
+@idAlerta = <id de GET {{escudo}}/v1/alertas>
+
+GET {{escudo}}/v1/alertas/{{idAlerta}}/expediente
+Authorization: Bearer {{tokenAnalista}}
+
+###
+GET {{escudo}}/v1/alertas/{{idAlerta}}/narrativa
+Authorization: Bearer {{tokenAnalista}}
+
+###
+GET {{escudo}}/v1/clientes/C00003/resumen?dias=30
+Authorization: Bearer {{tokenAnalista}}

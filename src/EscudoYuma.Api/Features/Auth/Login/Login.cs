@@ -1,6 +1,5 @@
 using EscudoYuma.Api.Shared.Auditoria;
 using EscudoYuma.Api.Shared.Estado;
-using EscudoYuma.Api.Shared.Features;
 using EscudoYuma.Api.Shared.Observabilidad;
 using EscudoYuma.Api.Shared.Persistencia;
 using EscudoYuma.Api.Shared.Seguridad;

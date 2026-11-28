@@ -11,6 +11,7 @@ __pycache__/
 *.pyc
 # Datos de prueba con claves (nunca versionar)
 seed/usuarios_prueba.json
+seed/billetera_usuarios_prueba.json
 # Secretos
 *.pfx
 appsettings.Production.json

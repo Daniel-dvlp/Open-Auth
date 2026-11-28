@@ -23,7 +23,23 @@
     <Content Include="..\..\training\artefactos\imputacion.json" Link="artefactos\imputacion.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\training\artefactos\explicacion.json" Link="artefactos\explicacion.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
+  <!-- Plantillas versionadas del narrador (Ollama). -->
+  <ItemGroup>
+    <Content Include="prompts\*.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="EscudoYuma.Api.Tests" />
+  </ItemGroup>
+  <!-- Infraestructura compartida con la billetera (src/Yuma.Comun). -->
+  <ItemGroup>
+    <Using Include="Yuma.Comun.Features" />
+    <Using Include="Yuma.Comun.Web" />
+    <Using Include="Yuma.Comun.Observabilidad" />
+    <Using Include="Yuma.Comun.Auditoria" />
+    <Using Include="Yuma.Comun.Seguridad" />
+    <Using Include="Yuma.Comun.Datos" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Yuma.Comun\Yuma.Comun.csproj" />
   </ItemGroup>
 </Project>

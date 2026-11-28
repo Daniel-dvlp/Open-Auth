@@ -1,4 +1,3 @@
-using EscudoYuma.Api.Shared.Features;
 using EscudoYuma.Api.Shared.Persistencia;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;

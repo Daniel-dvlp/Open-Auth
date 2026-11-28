@@ -1,0 +1,10 @@
+# Capa opcional: Ollama con GPU NVIDIA (requiere NVIDIA Container Toolkit / WSL2 con GPU). Sin GPU el modelo corre en CPU, más lento.
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

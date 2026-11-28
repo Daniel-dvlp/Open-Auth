@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace EscudoYuma.Api.Shared.Datos;
+namespace Yuma.Comun.Datos;
 
 /// <summary>
 /// Lector mínimo de los CSV sintéticos del caso de estudio (UTF-8 con BOM, separador coma, sin comillas ni saltos de línea

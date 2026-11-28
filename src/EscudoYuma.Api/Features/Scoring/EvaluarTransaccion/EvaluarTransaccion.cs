@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Globalization;
 using EscudoYuma.Api.Shared.Auditoria;
 using EscudoYuma.Api.Shared.Estado;
-using EscudoYuma.Api.Shared.Features;
+using EscudoYuma.Api.Shared.Expediente;
 using EscudoYuma.Api.Shared.Observabilidad;
 using EscudoYuma.Api.Shared.Persistencia;
 using EscudoYuma.Api.Shared.ReputacionCuentas;
@@ -65,7 +65,8 @@ public sealed class TransaccionValidator : AbstractValidator<Transaccion>
 /// </summary>
 public sealed class ManejadorEvaluarTransaccion(
     EscudoDbContext db, IEstadoEnLinea estado, IModeloRiesgoFactory fabrica, PoliticaDecision politica,
-    ExplicadorRazones explicador, RegistroBloqueos bloqueos, ColaReputacion reputaciones, ServicioAuditoria auditoria, TimeProvider reloj)
+    ExplicadorRazones explicador, RegistroBloqueos bloqueos, ColaReputacion reputaciones, ServicioAuditoria auditoria, TimeProvider reloj,
+    RegistroExpediente expediente, ColaNarrativas narrativas, ContextoAuditoria contexto, IHttpContextAccessor http)
 {
     public async Task<EvaluarTransaccionResponse> EjecutarAsync(Transaccion tx, CancellationToken ct)
     {
@@ -97,11 +98,37 @@ public sealed class ManejadorEvaluarTransaccion(
         if (r.Destino is { } d) reputaciones.Encolar(d, ahoraUtc);
 
         // 6) Auditoría y alerta (solo retener/rechazar)
-        await auditoria.RegistrarAsync("transaccion_evaluada", "score/transaccion", new
+        var eslabon = await auditoria.RegistrarAsync("transaccion_evaluada", "score/transaccion", new
         {
             id_transaccion = tx.IdTransaccion, id_cliente = tx.IdCliente, decision, decision_interna = PoliticaDecision.NombreInterno(nivel),
             puntaje = Math.Round(p, 6), reglas = attrs.Reglas.Select(x => x.IdRegla), version_modelo = modelo.Version,
         }, ct: ct);
+
+        // Expediente (asíncrono, no suma latencia): la operación y la decisión con sus normas, enlazadas al eslabón de auditoría.
+        var conExpediente = contexto.Actor != "replay-sandbox"; // el replay masivo no alimenta expedientes ni narrativas
+        var fechaNegocioUtc = DateTime.SpecifyKind(tx.FechaLocal.AddHours(5), DateTimeKind.Utc); // hora de la operación (Colombia -> UTC)
+        if (conExpediente)
+        {
+            var fuente = http.HttpContext?.User.FindFirst("rol")?.Value == Roles.Servicio ? FuentesHecho.Billetera : FuentesHecho.Escudo;
+            expediente.Registrar(TiposHecho.Transaccion, fuente, tx.IdCliente, tx.IdTransaccion, new
+            {
+                fecha_hora = tx.FechaHora, tipo_operacion = tx.TipoOperacion, canal = tx.Canal, monto_cop = tx.MontoCop, saldo_antes_cop = tx.SaldoAntesCop,
+                id_destino = tx.IdDestino, tipo_destino = tx.TipoDestino, destino_nuevo = tx.DestinoNuevo, id_dispositivo = tx.IdDispositivo,
+                dispositivo_nuevo = tx.DispositivoNuevo, cambio_clave_24h = tx.CambioClave24h, cambio_sim_48h = tx.CambioSim48h,
+                departamento_ip = tx.DepartamentoIp, ip_departamento_distinto = tx.IpDepartamentoDistinto, antiguedad_cuenta_dias = tx.AntiguedadCuentaDias,
+            }, null, contexto.IdCorrelacion, eslabon, fechaNegocioUtc);
+            var normas = attrs.Reglas.Select(x => x.IdRegla).Append("POL-UMBRALES").Append(CatalogoNormas.Piso(res.Piso)).ToList();
+            if (res.EscaladaPorIngreso) normas.Add("ESC-INGRESO");
+            if (decision == "desafiar") normas.Add("NORMA-AUTENTICACION-REFORZADA");
+            if (bloqueada) normas.Add("NORMA-BLOQUEO-ANALISTA");
+            expediente.Registrar(TiposHecho.Decision, FuentesHecho.Escudo, tx.IdCliente, tx.IdTransaccion, new
+            {
+                decision, decision_interna = PoliticaDecision.NombreInterno(nivel), puntaje = Math.Round(p, 6), version_modelo = modelo.Version,
+                reglas_disparadas = attrs.Reglas.Select(x => new { id = x.IdRegla, severidad = x.Severidad, razon = x.Razon }),
+                razones, score_ingreso = scoreIngreso, escalada_por_ingreso = res.EscaladaPorIngreso, cuenta_bloqueada = bloqueada,
+                latencia_scoring_ms = Math.Round(msScoring, 3),
+            }, normas, contexto.IdCorrelacion, eslabon, fechaNegocioUtc);
+        }
 
         if (nivel >= NivelInterno.Retener)
         {
@@ -114,7 +141,13 @@ public sealed class ManejadorEvaluarTransaccion(
                 };
                 db.Alertas.Add(alerta);
                 await db.SaveChangesAsync(ct);
-                await auditoria.RegistrarAsync("alerta_creada", "alertas", new { id_alerta = alerta.Id, id_transaccion = tx.IdTransaccion, decision }, ct: ct);
+                var eslabonAlerta = await auditoria.RegistrarAsync("alerta_creada", "alertas", new { id_alerta = alerta.Id, id_transaccion = tx.IdTransaccion, decision }, ct: ct);
+                if (conExpediente)
+                {
+                    expediente.Registrar(TiposHecho.Alerta, FuentesHecho.Escudo, tx.IdCliente, tx.IdTransaccion,
+                        new { id_alerta = alerta.Id, decision, monto_cop = tx.MontoCop }, null, contexto.IdCorrelacion, eslabonAlerta, ahoraUtc);
+                    narrativas.Encolar(alerta.Id); // narrativa en segundo plano: nunca en el camino de la decisión
+                }
             }
         }
 

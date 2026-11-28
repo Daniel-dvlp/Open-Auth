@@ -243,10 +243,14 @@ Invoke-RestMethod http://localhost:8080/health/ready
 | API con TLS | `https://localhost:8443` | Solo con la capa TLS (sección 7.8). |
 | Sandbox | `http://127.0.0.1:8081` | Solo escucha en localhost. |
 | Prometheus | `http://localhost:9090` | Solo localhost. |
-| Grafana | `http://localhost:3000` | Usuario `admin` y la clave `GRAFANA_PASSWORD`. Dashboard "Escudo Yuma - Operación". |
+| Grafana | `http://localhost:3000` | Usuario `admin` y la clave `GRAFANA_PASSWORD`. Dashboards "Escudo Yuma - Operación" y "Billetera Yuma - Operación". |
+| Billetera | `http://localhost:8082` | API de la billetera (contrato en `docs/contrato_billetera_frontend.md`, OpenAPI en `/openapi/v1.json`). |
+| Ollama | interno (`ollama:11434`) | LLM local para narrativas; `ollama-init` descarga el modelo (`OLLAMA_MODELO`) la primera vez. |
 | Métricas | Puerto 9091, interno | No publicado; solo lo raspa Prometheus dentro de la red de compose. |
 
-PostgreSQL y Redis no publican puertos. Los usuarios de prueba se crean en `seed/usuarios_prueba.json` en el primer arranque.
+PostgreSQL y Redis no publican puertos. Los usuarios de prueba se crean en `seed/usuarios_prueba.json` (Escudo) y `seed/billetera_usuarios_prueba.json` (billetera) en el primer arranque. La billetera usa la base `yuma_billetera` del mismo PostgreSQL.
+
+Ollama en CPU funciona, pero un modelo de 7B tarda varios segundos por narrativa; con GPU NVIDIA: `docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d`. Sin Ollama, las narrativas salen por plantilla y todo lo demás funciona igual.
 
 Para detener el entorno:
 
@@ -293,8 +297,8 @@ Los artefactos quedan en `training/artefactos/`: `modelo_tx.onnx`, `modelo_tx.js
 ### 7.5 Ejecutar las pruebas
 
 ```powershell
-cd C:\Users\Daniel\Documents\Yuma_Pay\escudo-yuma
-dotnet test EscudoYuma.sln
+cd C:\Users\Daniel\Documents\Yuma_Pay\Open-Auth
+dotnet test EscudoYuma.sln   # Escudo + Billetera
 
 cd training
 .\.venv\Scripts\python.exe -m pytest tests -q
@@ -365,6 +369,33 @@ curl.exe -k https://localhost:8443/v1/salud
 ```
 
 El puerto 8080 HTTP se mantiene para que Prometheus pueda raspar las métricas dentro de la red. En producción, el certificado real va en el ingress y se usa `Seguridad__ForzarHttps=true`.
+
+### 7.9 Billetera Yuma y narrativas con Ollama
+
+La billetera (`src/YumaBilletera.Api`) es un servicio aparte con la misma arquitectura (vertical slice + `src/Yuma.Comun`). Diseño y decisiones en `docs/plan_billetera_ollama.md`; contrato para el frontend en `docs/contrato_billetera_frontend.md`; colección de peticiones en `docs/billetera.http`.
+
+- **Regla de oro**: ningún débito se asienta sin decisión del Escudo (`POST /v1/score/transaccion`, antes de autorizar). Si el Escudo no responde en 300 ms, la operación queda `en_revision` con el monto reservado (falla cerrada) y se reevalúa en segundo plano.
+- **Libro mayor de doble partida** en COP enteros, con concurrencia optimista e idempotencia (`Idempotency-Key`).
+- **Datos del caso**: 6.000 clientes de `clientes.csv`; saldo inicial = último saldo real de `transacciones.csv`; historial de destinos, dispositivos y cambios de clave/SIM de los CSV.
+- **Riesgo medio**: biometría facial (simulada); con cambio de SIM en 48 h no se acepta OTP. Si no la supera, el caso pasa al analista.
+- **Resolución del analista** → aviso firmado (HMAC) a la billetera: falso positivo libera, fraude confirmado no deja salir el dinero, bloqueo definitivo bloquea la cuenta.
+- **Expediente + Ollama** (Escudo): cada hecho (operación, decisión con reglas y normas, eventos, ingresos, desafíos, resoluciones, configuración, alteraciones de la auditoría) se guarda ordenado y enlazado a la cadena de auditoría; un LLM local lo narra para el analista. El LLM nunca decide: su salida se valida contra el expediente (cifras, normas, sin datos personales) y, si falla, se usa la narrativa por plantilla.
+
+Ejecutar sin Docker (dos terminales):
+
+```powershell
+cd src\EscudoYuma.Api
+$env:Persistencia__Proveedor = "memoria"; $env:Seguridad__ForzarHttps = "false"; $env:Seed__ClaveServicio = "<clave de servicio de 16+>"
+$env:Billetera__UrlWebhook = "http://localhost:8082/v1/internas/resoluciones"; $env:Billetera__SecretoWebhook = "<secreto de 32+>"
+dotnet run
+```
+
+```powershell
+cd src\YumaBilletera.Api
+$env:Persistencia__Proveedor = "memoria"; $env:Escudo__UrlBase = "http://localhost:8080"
+$env:Escudo__LlaveServicio = "servicio01"; $env:Escudo__ClaveServicio = "<la misma clave de servicio>"; $env:Escudo__SecretoWebhook = "<el mismo secreto>"
+dotnet run
+```
 
 ## 8. Resultados
 

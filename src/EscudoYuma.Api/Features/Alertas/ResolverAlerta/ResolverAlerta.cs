@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using EscudoYuma.Api.Shared.Auditoria;
-using EscudoYuma.Api.Shared.Features;
+using EscudoYuma.Api.Shared.Expediente;
+using EscudoYuma.Api.Shared.Notificaciones;
 using EscudoYuma.Api.Shared.Observabilidad;
 using EscudoYuma.Api.Shared.Persistencia;
 using EscudoYuma.Api.Shared.ReputacionCuentas;
@@ -49,7 +50,8 @@ public sealed class ResolverAlertaValidator : AbstractValidator<ResolverAlertaRe
 /// ÚNICO camino del sistema que puede marcar el bloqueo definitivo de una cuenta, y solo con un analista humano autenticado.
 /// La resolución retroalimenta la reputación: fraude confirmado la sube, falso positivo la baja.
 /// </summary>
-public sealed class ManejadorResolverAlerta(EscudoDbContext db, ServicioAuditoria auditoria, TimeProvider reloj, RegistroBloqueos bloqueos)
+public sealed class ManejadorResolverAlerta(EscudoDbContext db, ServicioAuditoria auditoria, TimeProvider reloj, RegistroBloqueos bloqueos,
+    NotificadorResoluciones notificador, RegistroExpediente expediente, ContextoAuditoria contexto)
 {
     public const int AjusteFraude = 30;
     public const int AjusteFalsoPositivo = -15;
@@ -97,12 +99,20 @@ public sealed class ManejadorResolverAlerta(EscudoDbContext db, ServicioAuditori
             return Results.Problem(title: "Alerta ya resuelta", detail: "La alerta ya tiene una resolución registrada.", statusCode: 409);
         }
         if (rep.BloqueoDefinitivo) bloqueos.Marcar(rep.IdCuenta); // el pipeline de scoring consulta este registro en memoria
-        await auditoria.RegistrarAsync("alerta_resuelta", "alertas", new
+        var eslabon = await auditoria.RegistrarAsync("alerta_resuelta", "alertas", new
         {
             id_alerta = alerta.Id, id_transaccion = alerta.IdTransaccion, id_cliente = alerta.IdCliente,
             resolucion = req.Resolucion, accion = req.Accion, bloqueo_definitivo = rep.BloqueoDefinitivo,
         }, actor: analista, ct: ct);
         MetricasYuma.AlertasResueltas.WithLabels(req.Resolucion).Inc();
+        // El comentario libre del analista no va al expediente (podría contener datos personales escritos a mano).
+        expediente.Registrar(TiposHecho.Resolucion, FuentesHecho.Analista, alerta.IdCliente, alerta.IdTransaccion, new
+        {
+            id_alerta = alerta.Id, resolucion = req.Resolucion, accion = req.Accion, bloqueo_definitivo = rep.BloqueoDefinitivo,
+            puntaje_reputacion = rep.Puntaje, tiene_comentario = !string.IsNullOrWhiteSpace(req.Comentario),
+        }, req.Accion == Acciones.BloquearCuenta ? ["NORMA-BLOQUEO-ANALISTA"] : null, contexto.IdCorrelacion, eslabon, ahora);
+        // La billetera aplica la resolución a la operación retenida (liberar o no dejar salir el dinero) y refleja el bloqueo definitivo.
+        notificador.Encolar(new AvisoResolucion(alerta.IdTransaccion, alerta.IdCliente, req.Resolucion, req.Accion, rep.BloqueoDefinitivo, ahora));
 
         return Results.Ok(new ResolverAlertaResponse(alerta.Id, alerta.Estado, req.Resolucion, req.Accion, rep.Puntaje, rep.BloqueoDefinitivo));
     }

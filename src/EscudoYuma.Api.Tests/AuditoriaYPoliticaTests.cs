@@ -252,6 +252,18 @@ public class BloqueoDefinitivoTests(FabricaApi api) : IClassFixture<FabricaApi>
         await Llamar(analista, "POST", "/v1/alertas/{idAlerta:guid}/resolver", $"/v1/alertas/{Guid.NewGuid()}/resolver",
             new { resolucion = "falso_positivo", accion = "liberar_transaccion" });
 
+        // Rutas de integración con la billetera (rol servicio): ninguna bloquea cuentas.
+        await Llamar(servicio, "POST", "/v1/auth/evaluar-ingreso", "/v1/auth/evaluar-ingreso",
+            new { id_cliente = "C-BLK", id_dispositivo = "DISP-OTRO", departamento_ip = "Bogotá D.C.", dispositivos_conocidos = new[] { "DISP-1" } });
+        await Llamar(servicio, "POST", "/v1/alertas/desafio-fallido", "/v1/alertas/desafio-fallido",
+            new { id_transaccion = "TY-BLK-1", id_cliente = "C-BLK", monto_cop = 1_900_000, metodo = "biometria", detalle = "no coincide", puntaje = 0.9 });
+        await Llamar(servicio, "GET", "/v1/transacciones/{idTransaccion}/decision", "/v1/transacciones/TY-BLK-1/decision");
+        // Expediente y narrativas (analista, solo lectura o encolar): tampoco bloquean.
+        await Llamar(analista, "GET", "/v1/alertas/{idAlerta:guid}/expediente", $"/v1/alertas/{Guid.NewGuid()}/expediente");
+        await Llamar(analista, "GET", "/v1/alertas/{idAlerta:guid}/narrativa", $"/v1/alertas/{Guid.NewGuid()}/narrativa");
+        await Llamar(analista, "POST", "/v1/alertas/{idAlerta:guid}/narrativa/regenerar", $"/v1/alertas/{Guid.NewGuid()}/narrativa/regenerar");
+        await Llamar(analista, "GET", "/v1/clientes/{idCliente}/resumen", "/v1/clientes/C-BLK/resumen");
+
         Assert.Equal(rutas, ejercitadas.ToList());
         Assert.Equal(0, await BloqueadasAsync());
     }

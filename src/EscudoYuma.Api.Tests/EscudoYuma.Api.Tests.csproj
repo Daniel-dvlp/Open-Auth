@@ -22,4 +22,13 @@
   <ItemGroup>
     <ProjectReference Include="..\EscudoYuma.Api\EscudoYuma.Api.csproj" />
   </ItemGroup>
+  <!-- Infraestructura compartida con la billetera (src/Yuma.Comun). -->
+  <ItemGroup>
+    <Using Include="Yuma.Comun.Features" />
+    <Using Include="Yuma.Comun.Web" />
+    <Using Include="Yuma.Comun.Observabilidad" />
+    <Using Include="Yuma.Comun.Auditoria" />
+    <Using Include="Yuma.Comun.Seguridad" />
+    <Using Include="Yuma.Comun.Datos" />
+  </ItemGroup>
 </Project>

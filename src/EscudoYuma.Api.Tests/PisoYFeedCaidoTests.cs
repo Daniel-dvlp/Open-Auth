@@ -2,7 +2,6 @@ using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using EscudoYuma.Api.Shared.Datos;
 using EscudoYuma.Api.Shared.Estado;
 using EscudoYuma.Api.Shared.Persistencia;
 using EscudoYuma.Api.Shared.Reglas;

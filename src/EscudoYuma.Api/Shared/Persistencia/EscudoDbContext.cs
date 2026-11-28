@@ -4,13 +4,15 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 namespace EscudoYuma.Api.Shared.Persistencia;
 
 /// <summary>DbContext Scoped (un contexto por request; no es thread-safe).</summary>
-public class EscudoDbContext(DbContextOptions<EscudoDbContext> opciones) : DbContext(opciones)
+public class EscudoDbContext(DbContextOptions<EscudoDbContext> opciones) : DbContext(opciones), IBaseConAuditoria
 {
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<DispositivoConocido> Dispositivos => Set<DispositivoConocido>();
     public DbSet<ReputacionCuenta> Reputaciones => Set<ReputacionCuenta>();
     public DbSet<Alerta> Alertas => Set<Alerta>();
     public DbSet<RegistroAuditoria> Auditoria => Set<RegistroAuditoria>();
+    public DbSet<HechoExpediente> Hechos => Set<HechoExpediente>();
+    public DbSet<NarrativaAlerta> Narrativas => Set<NarrativaAlerta>();
 
     private static ValueComparer<List<string>> ComparadorLista() => new(
         (a, b) => a != null && b != null && a.SequenceEqual(b),
@@ -50,33 +52,40 @@ public class EscudoDbContext(DbContextOptions<EscudoDbContext> opciones) : DbCon
             e.Property(x => x.Estado).IsConcurrencyToken(); // dos analistas no pueden resolver la misma alerta a la vez
             e.Property(x => x.Razones).HasConversion(l => JsonLista.Serializar(l), s => JsonLista.Deserializar(s), ComparadorLista());
         });
-        mb.Entity<RegistroAuditoria>(e =>
+        mb.Entity<HechoExpediente>(e =>
         {
             e.HasKey(x => x.Id);
-            e.HasIndex(x => x.Secuencia).IsUnique(); // dos escritores concurrentes no pueden bifurcar la cadena
-            e.Property(x => x.HashPrevio).HasMaxLength(64);
-            e.Property(x => x.Hash).HasMaxLength(64);
+            e.HasIndex(x => new { x.IdTransaccion, x.Id });
+            e.HasIndex(x => new { x.IdCliente, x.FechaUtc });
+            e.Property(x => x.Tipo).HasMaxLength(32);
+            e.Property(x => x.Normas).HasConversion(l => JsonLista.Serializar(l), s => JsonLista.Deserializar(s), ComparadorLista());
         });
+        mb.Entity<NarrativaAlerta>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => new { x.IdAlerta, x.CreadaUtc });
+        });
+        mb.ConfigurarAuditoria();
     }
 
-    // La auditoría es append-only: se rechaza cualquier UPDATE/DELETE desde la aplicación.
-    private void ProtegerAuditoria()
+    /// <summary>El expediente, como la auditoría, es append-only.</summary>
+    private void ProtegerExpediente()
     {
-        var prohibido = ChangeTracker.Entries<RegistroAuditoria>()
-            .Any(e => e.State is EntityState.Modified or EntityState.Deleted);
-        if (prohibido)
-            throw new InvalidOperationException("RegistroAuditoria es append-only: no admite modificación ni borrado.");
+        if (ChangeTracker.Entries<HechoExpediente>().Any(e => e.State is EntityState.Modified or EntityState.Deleted))
+            throw new InvalidOperationException("HechoExpediente es append-only: no admite modificación ni borrado.");
     }
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
-        ProtegerAuditoria();
+        ChangeTracker.ProtegerAuditoria();
+        ProtegerExpediente();
         return base.SaveChanges(acceptAllChangesOnSuccess);
     }
 
     public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
-        ProtegerAuditoria();
+        ChangeTracker.ProtegerAuditoria();
+        ProtegerExpediente();
         return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
 }

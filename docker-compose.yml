@@ -1,4 +1,5 @@
-# Escudo Yuma - entorno local completo. Uso:  cp .env.example .env  &&  docker compose up --build
+# Escudo Yuma + Billetera Yuma + Ollama - entorno local completo. Uso:  cp .env.example .env  &&  docker compose up --build
+# GPU NVIDIA para Ollama (opcional):  docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
 services:
   api:
     build: .
@@ -22,12 +23,70 @@ services:
       Seguridad__Metricas__Puerto: "9091"        # /metrics solo por este puerto interno (NO publicado); el 8080 devuelve 404 para /metrics
       Seed__RutaClientes: /caso/03_Datos/clientes.csv
       Seed__RutaSalida: /seed/usuarios_prueba.json
+      Seed__ClaveServicio: ${ESCUDO_CLAVE_SERVICIO:?defina ESCUDO_CLAVE_SERVICIO en .env}   # cuenta servicio01 que usa la billetera
+      # Avisos de resolución firmados hacia la billetera (el analista libera o confirma fraude -> la billetera mueve o no el dinero).
+      Billetera__UrlWebhook: http://billetera:8080/v1/internas/resoluciones
+      Billetera__SecretoWebhook: ${WEBHOOK_SECRETO:?defina WEBHOOK_SECRETO en .env}
+      # Narrativas en lenguaje natural con un LLM local (sin costo y sin sacar datos): solo describe, nunca decide.
+      Ollama__UrlBase: http://ollama:11434
+      Ollama__Modelo: ${OLLAMA_MODELO:-qwen2.5:7b-instruct}
+      Logging__Json: "true"
     volumes:
       - ../Caso_de_estudio_Yuma_Pay:/caso:ro
       - ./seed:/seed
     ports: ["8080:8080"]   # solo la API; 9091 (metricas) permanece interno a la red de compose
     security_opt: ["no-new-privileges:true"]
     cap_drop: [ALL]
+
+  billetera:   # Billetera Yuma: cuentas, libro mayor y transferencias; cada operación se califica ANTES en el Escudo (api)
+    build:
+      context: .
+      dockerfile: Dockerfile.billetera
+    depends_on:
+      postgres: { condition: service_healthy }
+      api: { condition: service_started }
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      Persistencia__Proveedor: postgres
+      Persistencia__Conexion: Host=postgres;Database=yuma_billetera;Username=escudo;Password=${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD en .env}
+      Jwt__Clave: ${JWT_CLAVE_BILLETERA:?defina JWT_CLAVE_BILLETERA en .env}
+      Seguridad__ForzarHttps: "false"   # demo local sobre http; en produccion TLS lo termina el balanceador/ingress
+      Escudo__UrlBase: http://api:8080
+      Escudo__LlaveServicio: servicio01
+      Escudo__ClaveServicio: ${ESCUDO_CLAVE_SERVICIO:?defina ESCUDO_CLAVE_SERVICIO en .env}
+      Escudo__DispositivoServicio: DISP-servicio01
+      Escudo__SecretoWebhook: ${WEBHOOK_SECRETO:?defina WEBHOOK_SECRETO en .env}
+      Seed__Habilitado: "true"
+      Seed__PermitirFueraDeDesarrollo: "true"   # demo con datos 100 % sinteticos del caso
+      Seed__RutaDatos: /caso/03_Datos
+      Seed__RutaSalida: /seed/billetera_usuarios_prueba.json
+      OpenApi__Habilitado: "true"               # contrato para el equipo de frontend en /openapi/v1.json
+      ASPNETCORE_URLS: http://+:8080;http://+:9091
+      Seguridad__Metricas__Puerto: "9091"
+      Logging__Json: "true"
+    volumes:
+      - ../Caso_de_estudio_Yuma_Pay:/caso:ro
+      - ./seed:/seed
+    ports: ["8082:8080"]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+
+  ollama:   # LLM local para narrativas (sin puerto publicado: solo lo usa el Escudo dentro de la red de compose)
+    image: ollama/ollama:0.5.7
+    volumes: ["ollama_data:/root/.ollama"]
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      retries: 30
+
+  ollama-init:   # descarga el modelo una sola vez (queda en el volumen ollama_data)
+    image: ollama/ollama:0.5.7
+    depends_on:
+      ollama: { condition: service_healthy }
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["ollama", "pull", "${OLLAMA_MODELO:-qwen2.5:7b-instruct}"]
+    restart: "no"
 
   postgres:
     image: postgres:16.4-alpine
@@ -76,3 +135,4 @@ services:
 
 volumes:
   pgdata:
+  ollama_data:

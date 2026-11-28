@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using EscudoYuma.Api.Shared.Features;
 using EscudoYuma.Api.Shared.Persistencia;
 using Microsoft.EntityFrameworkCore;
 

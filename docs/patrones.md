@@ -97,3 +97,32 @@ Otros hallazgos de la carga: el candado de auditoría serializaba un commit por 
 ## Decisiones de hackatón
 - Esquema con `EnsureCreated` (sin migraciones EF); estado en línea en memoria; `/metrics` sin autenticación (restringir por red en producción).
 - Claves de prueba del seeder: `seed/usuarios_prueba.json` (ignorado por git); nunca se escriben en logs.
+
+
+## Billetera Yuma (src/YumaBilletera.Api) y proyecto común (src/Yuma.Comun)
+
+Misma arquitectura: cada caso de uso en `Features/<Area>/<Caso>/` (`IFeature`); lo transversal en `Shared/`. `Yuma.Comun` contiene solo infraestructura
+compartida por las dos APIs (descubrimiento de features, validación, ProblemDetails, correlación y métricas HTTP, cabeceras seguras, JWT, limitador,
+lector CSV, hora de Colombia y la cadena de auditoría `ServicioAuditoriaBase<TDb>`), sin lógica de negocio.
+
+| Componente | Lifetime | Patrón / por qué |
+|---|---|---|
+| `ProcesadorOperacion` | Scoped | **Pipeline** de toda operación que mueve dinero: idempotencia → sesión y destino → señales → reserva → Escudo → decisión → auditoría. |
+| `LibroMayor` | Scoped | Doble partida (un débito y un crédito por asiento; la suma de saldos es 0). Concurrencia optimista con `Cuenta.Version`. |
+| `ConstructorSenales` | Scoped | Señales del esquema `Transaccion` con datos de la billetera (solo información anterior a la operación). |
+| `IEscudoCliente` / `IEscudoSincronizacion` → `EscudoHttpCliente` | Singleton | **Adapter** HTTP con token de servicio renovado en segundo plano y circuit breaker. Sin configuración: `EscudoNoConfigurado` (falla cerrada). Las calificaciones no se reintentan (el Escudo actualiza su estado en cada una). |
+| `PublicadorEventos` + `DespachadorBandeja` | Scoped | **Outbox**: el evento se guarda con el cambio que lo origina y se entrega después; antes de calificar se entregan los del cliente para respetar el orden. |
+| `TrabajadorIntegracion` | Hosted | Entrega la bandeja, reevalúa operaciones sin decisión y concilia casos resueltos cuyo aviso se perdió. |
+| `AplicadorResoluciones` | Scoped | Aplica la resolución del analista (aviso HMAC o conciliación); idempotente. |
+| `IVerificadorBiometrico` → `BiometriaSimulada`, `IEnviadorOtp` → `BuzonOtpDesarrollo` | Singleton | **Adapter**: proveedores reales reemplazables sin tocar los casos de uso. |
+
+## Expediente y narrativas (Escudo)
+
+| Componente | Lifetime | Por qué |
+|---|---|---|
+| `RegistroExpediente` + `EscritorExpediente` | Singleton + Hosted | Cola acotada: registrar un hecho no suma latencia a la calificación; se persiste por lotes. |
+| `ConstructorExpediente` | Scoped | Hechos de la operación y del cliente (72 h antes de la operación), reputación y normas citables (`CatalogoNormas`). |
+| `INarrador` → `OllamaNarrador` | Singleton | **Adapter** del LLM local (salida restringida por esquema JSON, temperatura 0,1, prompt versionado en `prompts/`). |
+| `ValidadorNarrativa` + `NarradorPlantilla` | estático | La salida del LLM se descarta si cita cifras o normas que no están en el expediente o incluye un celular; respaldo determinista. |
+| `ColaNarrativas` + `GeneradorNarrativas` | Singleton + Hosted | Narrativas asíncronas, una a la vez (el LLM es el recurso escaso). |
+| `VerificadorCadena` | Hosted | Verifica la cadena de auditoría cada N minutos y registra `alteracion_auditoria`. |

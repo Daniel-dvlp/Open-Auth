@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#101d2b" />
+    <meta name="description" content="Consola de revisión de alertas de Escudo Yuma." />
+    <title>Escudo Yuma · Revisión de riesgo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Navegación principal">
+        <a class="brand" href="#inicio" aria-label="Escudo Yuma, inicio">
+          <span class="brand-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3.5 26 7v8.1c0 6.1-4.2 10.8-10 13.4C10.2 25.9 6 21.2 6 15.1V7l10-3.5Z"/><path d="m11.3 15.8 3.1 3.1 6.5-6.6"/></svg></span>
+          <span class="brand-copy"><strong>escudo</strong><small>YUMA · RIESGO</small></span>
+        </a>
+
+        <div class="workspace-label">ESPACIO DE TRABAJO</div>
+        <nav class="primary-nav">
+          <a class="nav-item active" href="#cola" data-view="pendiente"><span class="nav-icon">▤</span><span>Cola de revisión</span><span class="nav-count" id="nav-pending">—</span></a>
+          <a class="nav-item" href="#historial" data-view="resuelta"><span class="nav-icon">◷</span><span>Casos resueltos</span></a>
+          <a class="nav-item" href="#evaluar" data-view="scoring"><span class="nav-icon">◈</span><span>Evaluar transacción</span></a>
+          <a class="nav-item" href="#cuenta" data-view="cuenta"><span class="nav-icon">⌕</span><span>Consultar cuenta</span></a>
+          <a class="nav-item" href="#sandbox" data-view="sandbox"><span class="nav-icon">⟳</span><span>Replay sandbox</span></a>
+          <a class="nav-item" href="#acceso" data-view="acceso"><span class="nav-icon">◎</span><span>Mi acceso</span></a>
+        </nav>
+
+        <div class="sidebar-rule"></div>
+        <div class="workspace-label">SISTEMA</div>
+        <div class="system-state"><span class="live-dot" id="health-dot"></span><span><strong id="health-label">Comprobando API</strong><small id="health-meta">Escudo Yuma · v1</small></span></div>
+
+        <div class="sidebar-bottom">
+          <div class="sidebar-note"><span class="note-glyph">↗</span><span><strong>Decisiones con contexto</strong><small>Cada alerta incluye señales legibles para revisión humana.</small></span></div>
+          <button class="profile-button" id="profile-button" type="button" aria-label="Cerrar sesión">
+            <span class="avatar" id="profile-avatar">A</span><span class="profile-copy"><strong id="profile-name">Analista</strong><small>Sesión segura</small></span><span class="profile-menu">···</span>
+          </button>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div class="breadcrumbs"><span>Operación</span><span class="crumb-slash">/</span><strong id="breadcrumb-current">Cola de revisión</strong></div>
+          <div class="topbar-actions"><span class="clock-label" id="local-clock">—</span><span class="topbar-separator"></span><button class="icon-button" id="refresh-button" type="button" aria-label="Actualizar alertas" title="Actualizar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8.1 8.1 0 0 0-14.8-3L3 11m0-6v6h6m-5 2a8.1 8.1 0 0 0 14.8 3L21 13m0 6v-6h-6"/></svg></button><span class="analyst-chip" id="analyst-chip"><span class="live-dot"></span> ANALISTA</span></div>
+        </header>
+
+        <section class="app-view" id="view-alertas">
+        <section class="page-heading">
+          <div><div class="eyebrow"><span class="eyebrow-line"></span> CENTRO DE OPERACIONES <span class="eyebrow-date" id="today-label"></span></div><h1 id="page-title">Cola de revisión</h1><p id="page-subtitle">Casos que requieren criterio humano antes de continuar.</p></div>
+          <button class="button button-secondary" id="reload-button" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8.1 8.1 0 0 0-14.8-3L3 11m0-6v6h6m-5 2a8.1 8.1 0 0 0 14.8 3L21 13m0 6v-6h-6"/></svg><span>Actualizar cola</span></button>
+        </section>
+
+        <section class="metrics-row" aria-label="Resumen de la cola">
+          <article class="metric-card metric-primary"><div class="metric-top"><span>Casos en esta vista</span><span class="metric-icon icon-queue">▤</span></div><div class="metric-value" id="metric-total">—</div><div class="metric-foot"><span class="metric-live"><i></i> Cola sincronizada</span><span class="metric-foot-note">hasta 200 registros</span></div></article>
+          <article class="metric-card"><div class="metric-top"><span>En retención</span><span class="metric-icon icon-hold">Ⅱ</span></div><div class="metric-value" id="metric-hold">—</div><div class="metric-foot"><span class="metric-foot-note">Revisión prioritaria</span></div></article>
+          <article class="metric-card"><div class="metric-top"><span>Monto bajo revisión</span><span class="metric-icon icon-money">$</span></div><div class="metric-value metric-money" id="metric-amount">—</div><div class="metric-foot"><span class="metric-foot-note">Suma de los casos cargados</span></div></article>
+          <article class="metric-card"><div class="metric-top"><span>Riesgo más alto</span><span class="metric-icon icon-risk">↗</span></div><div class="metric-value" id="metric-risk">—</div><div class="metric-foot"><span class="risk-meter"><i id="risk-meter-fill"></i></span><span class="metric-foot-note">Puntaje del modelo</span></div></article>
+        </section>
+
+        <section class="workbench" id="cola">
+          <div class="queue-panel">
+            <div class="panel-heading"><div><div class="panel-kicker">PRIORIZACIÓN AUTOMÁTICA</div><h2 id="queue-title">Alertas pendientes <span class="heading-count" id="queue-count">—</span></h2></div><button class="more-button" type="button" id="queue-menu" aria-label="Opciones de cola">···</button></div>
+            <div class="queue-toolbar"><label class="search-box"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.2 4.2"/></svg><input id="search-input" type="search" placeholder="Buscar cliente o transacción" autocomplete="off" /></label><label class="filter-select"><span class="sr-only">Filtrar decisión</span><select id="decision-filter"><option value="todos">Todas las decisiones</option><option value="retener">Retenidas</option><option value="desafiar">Desafiadas</option><option value="rechazar">Rechazadas</option></select><span class="select-caret">⌄</span></label></div>
+            <div class="table-head"><span>TRANSACCIÓN / CLIENTE</span><span>DECISIÓN</span><span>MONTO</span><span>RIESGO</span><span></span></div>
+            <div class="alert-list" id="alert-list" aria-live="polite"><div class="loading-state"><span class="loader"></span><span>Cargando alertas…</span></div></div>
+            <div class="queue-footer"><span id="queue-footer-label">—</span><button id="show-more-button" type="button" class="text-button" hidden>Ver más <span>→</span></button></div>
+          </div>
+
+          <aside class="detail-panel" id="detail-panel" aria-live="polite">
+            <div class="detail-empty"><div class="empty-orbit"><span>⌁</span></div><div class="panel-kicker">DETALLE DEL CASO</div><h2>Selecciona una alerta</h2><p>Revisa las señales y el contexto de la cuenta antes de registrar una decisión.</p></div>
+          </aside>
+        </section>
+
+        <footer class="page-footer"><span><span class="footer-shield">◇</span> Escudo Yuma <span class="footer-dot">·</span><span id="footer-context">Decisiones sujetas a revisión humana</span></span><span id="last-updated">Última actualización —</span></footer>
+        </section>
+
+        <section class="app-view feature-view" id="view-scoring" hidden>
+          <section class="page-heading feature-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> MOTOR EN TIEMPO REAL <span class="eyebrow-date">PREAUTORIZACIÓN</span></div><h1>Evaluar transacción</h1><p>Revisa qué decisión tomaría Escudo Yuma antes de autorizar una operación.</p></div><span class="feature-live"><i></i> Endpoint <code>POST /v1/score/transaccion</code></span></section>
+          <div class="feature-grid scoring-grid">
+            <section class="surface-card scoring-form-card"><div class="surface-heading"><div><div class="panel-kicker">DATOS DE LA OPERACIÓN</div><h2>Contexto de evaluación</h2><p>Completa las señales disponibles. Los campos iniciales son ejemplos editables.</p></div><button type="button" class="text-button" id="score-reset">Restablecer ejemplo</button></div>
+              <form id="score-form" class="score-form">
+                <div class="form-section-label">OPERACIÓN <span>01</span></div>
+                <div class="form-grid"><label class="form-field"><span>ID de transacción</span><input name="id_transaccion" maxlength="32" required /></label><label class="form-field"><span>Fecha y hora (Colombia)</span><input name="fecha_hora" type="datetime-local" step="1" required /></label><label class="form-field"><span>Tipo de operación</span><select name="tipo_operacion"><option value="transferencia_inmediata">Transferencia inmediata</option><option value="pago_qr">Pago QR</option><option value="retiro_corresponsal">Retiro en corresponsal</option><option value="retiro_cajero">Retiro en cajero</option><option value="pago_servicios">Pago de servicios</option><option value="recarga_celular">Recarga celular</option><option value="compra_tarjeta_virtual">Compra con tarjeta virtual</option></select></label><label class="form-field"><span>Canal</span><select name="canal"><option value="app">App</option><option value="corresponsal">Corresponsal</option><option value="cajero">Cajero</option></select></label><label class="form-field"><span>Monto (COP)</span><input name="monto_cop" type="number" min="1" max="1000000000000" required /></label><label class="form-field"><span>Saldo antes (COP)</span><input name="saldo_antes_cop" type="number" min="0" max="1000000000000" required /></label></div>
+                <div class="form-section-label">CUENTA Y DESTINO <span>02</span></div>
+                <div class="form-grid"><label class="form-field"><span>ID del cliente</span><input name="id_cliente" maxlength="32" required /></label><label class="form-field"><span>Antigüedad de cuenta (días)</span><input name="antiguedad_cuenta_dias" type="number" min="0" max="36500" required /></label><label class="form-field"><span>ID del destino</span><input name="id_destino" maxlength="64" required /></label><label class="form-field"><span>Tipo de destino</span><select name="tipo_destino"><option value="cuenta_yuma">Cuenta Yuma</option><option value="otra_entidad">Otra entidad</option><option value="comercio">Comercio</option><option value="corresponsal">Corresponsal</option><option value="cajero">Cajero</option><option value="servicio">Servicio</option><option value="operador">Operador</option></select></label></div>
+                <div class="form-section-label">SEÑALES DE SESIÓN <span>03</span></div>
+                <div class="form-grid"><label class="form-field"><span>ID del dispositivo</span><input name="id_dispositivo" maxlength="64" required /></label><label class="form-field"><span>Departamento de IP</span><input name="departamento_ip" maxlength="64" /></label><label class="form-field"><span>Destino nuevo</span><select name="destino_nuevo"><option value="0">No</option><option value="1">Sí</option></select></label><label class="form-field"><span>Dispositivo nuevo</span><select name="dispositivo_nuevo"><option value="0">No</option><option value="1">Sí</option></select></label><label class="form-field"><span>Cambio de clave (24 h)</span><select name="cambio_clave_24h"><option value="0">No</option><option value="1">Sí</option></select></label><label class="form-field"><span>Cambio de SIM (48 h)</span><select name="cambio_sim_48h"><option value="0">No</option><option value="1">Sí</option></select></label><label class="form-field"><span>IP de otro departamento</span><select name="ip_departamento_distinto"><option value="0">No</option><option value="1">Sí</option></select></label></div>
+                <div class="score-side-effect"><span class="score-side-icon">i</span><span><strong id="score-effect-title">Esta evaluación sí llega al motor.</strong><small id="score-effect-copy">Actualiza su estado en línea y auditoría; si la decisión es retener o rechazar, puede crear una alerta real.</small></span></div>
+                <div class="score-form-actions"><span class="form-error" id="score-error" role="alert"></span><button class="button button-primary" id="score-submit" type="submit">Evaluar operación <span>→</span></button></div>
+              </form>
+            </section>
+            <aside class="surface-card score-output" id="score-output"><div class="output-empty"><div class="empty-orbit"><span>◈</span></div><div class="panel-kicker">RESULTADO DEL MOTOR</div><h2>Esperando una operación</h2><p>La decisión, el puntaje y las razones aparecerán aquí después de evaluar.</p></div></aside>
+          </div>
+        </section>
+
+        <section class="app-view feature-view" id="view-cuenta" hidden>
+          <section class="page-heading feature-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> INTELIGENCIA DE CUENTA</div><h1>Consultar reputación</h1><p>Consulta la reputación y las señales registradas para una cuenta.</p></div><span class="feature-live">Endpoint <code>GET /v1/cuentas/{id}/reputacion</code></span></section>
+          <section class="surface-card account-lookup"><form id="account-form"><label class="form-field"><span>Identificador de cuenta</span><input name="id_cuenta" placeholder="Ej. CLI-000001" maxlength="32" required /></label><button class="button button-primary" type="submit">Consultar cuenta <span>→</span></button></form><p class="form-hint" id="account-hint">Como analista puedes consultar cualquier cuenta existente en el entorno.</p><div id="account-result" class="account-result"><div class="output-empty compact-empty"><div class="empty-orbit"><span>⌕</span></div><h2>Busca una cuenta para empezar</h2><p>Verás su puntaje de riesgo, reputación, señales y estado de bloqueo.</p></div></div></section>
+        </section>
+
+        <section class="app-view feature-view" id="view-sandbox" hidden>
+          <section class="page-heading feature-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> VALIDACIÓN DEL MOTOR</div><h1>Replay de sandbox</h1><p>Ejecuta y consulta el replay disponible en el entorno de evaluación.</p></div><span class="feature-live">Endpoint <code>/v1/sandbox/replay</code></span></section>
+          <div class="feature-grid sandbox-grid"><section class="surface-card sandbox-card"><div class="sandbox-illustration"><span class="sandbox-orbit orbit-one"></span><span class="sandbox-orbit orbit-two"></span><span class="sandbox-center">⟳</span></div><div class="panel-kicker">EJECUCIÓN CONTROLADA</div><h2>Reprocesar transacciones</h2><p>El replay compara el comportamiento del motor con el sandbox y genera un reporte. Puede tardar varios minutos según el tamaño de los datos.</p><div class="replay-status" id="replay-status"><span class="status-led"></span><span><strong>Consultando estado…</strong><small>El estado se lee desde el backend.</small></span></div><div class="replay-progress" id="replay-progress" hidden><span><i id="replay-progress-fill"></i></span><strong id="replay-progress-label">0%</strong></div><div class="replay-warning"><span>!</span><p><strong id="replay-warning-title">El replay reinicia el estado en línea.</strong> <span id="replay-warning-copy">Hazlo solo en un entorno de demostración; no es una acción para producción.</span></p></div><label class="confirm-replay"><input type="checkbox" id="replay-confirm" /><span id="replay-confirm-copy">Entiendo que esta ejecución restablece el estado en línea del motor.</span></label><button class="button button-primary replay-button" id="replay-start" type="button" disabled>Iniciar replay <span>→</span></button><div class="form-error" id="replay-error" role="alert"></div></section><section class="surface-card replay-info"><div class="panel-kicker">QUÉ HACE EL REPLAY</div><h2>Una prueba de punta a punta</h2><ol class="replay-steps"><li><span>01</span><div><strong>Lee los datos del sandbox</strong><small>Transacciones y eventos cronológicos del conjunto de evaluación.</small></div></li><li><span>02</span><div><strong>Ejecuta el mismo scoring</strong><small>El pipeline real evalúa cada transacción y publica su decisión.</small></div></li><li><span>03</span><div><strong>Guarda un reporte</strong><small>El backend escribe métricas y latencias en la ruta configurada.</small></div></li></ol><div class="replay-note" id="replay-config-copy">Esta herramienta depende de que `Sandbox:ReplayHabilitado` esté activo y de que el sandbox y los datos estén disponibles.</div></section></div>
+        </section>
+
+        <section class="app-view feature-view" id="view-acceso" hidden>
+          <section class="page-heading feature-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> SEGURIDAD DE SESIÓN</div><h1>Mi acceso</h1><p>Consulta tu sesión y registra un dispositivo conocido para tu cuenta.</p></div><span class="feature-live"><i></i> Token temporal</span></section>
+          <div class="feature-grid profile-grid"><section class="surface-card session-card"><div class="profile-large"><span class="avatar-large" id="session-avatar">A</span><div><div class="panel-kicker">SESIÓN ACTUAL</div><h2 id="session-name">Analista</h2><span class="role-pill">ANALISTA</span></div></div><dl class="session-details"><div><dt>Usuario</dt><dd id="session-user">—</dd></div><div><dt>Vencimiento del token</dt><dd id="session-expiry">No disponible</dd></div><div><dt>Conexión</dt><dd id="session-connection">—</dd></div></dl><button class="button button-secondary" id="sign-out-button" type="button">Cerrar sesión</button></section><section class="surface-card device-card"><div class="panel-kicker">DISPOSITIVO CONOCIDO</div><h2>Registrar este dispositivo</h2><p>Los dispositivos conocidos ayudan al motor a distinguir el uso habitual de un acceso inusual.</p><form id="device-form"><label class="form-field"><span>Identificador del dispositivo</span><input name="id_dispositivo" maxlength="64" placeholder="Ej. WEB-ANALISTA-01" required pattern="[A-Za-z0-9._:-]+" /></label><label class="form-field"><span>Sistema operativo</span><select name="sistema_operativo"><option value="">No especificar</option><option value="Android">Android</option><option value="iOS">iOS</option></select></label><button class="button button-primary" type="submit">Registrar dispositivo <span>→</span></button><div class="form-error" id="device-error" role="alert"></div></form><div id="device-result" class="device-result" aria-live="polite"></div></section></div>
+        </section>
+      </main>
+    </div>
+
+    <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+    <dialog class="login-dialog" id="login-dialog" aria-labelledby="login-title">
+      <form class="login-card" id="login-form">
+        <div class="login-brand"><span class="brand-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3.5 26 7v8.1c0 6.1-4.2 10.8-10 13.4C10.2 25.9 6 21.2 6 15.1V7l10-3.5Z"/><path d="m11.3 15.8 3.1 3.1 6.5-6.6"/></svg></span><span>ESCUDO <b>YUMA</b></span></div>
+        <div class="login-overline">ACCESO DE ANALISTA</div><h1 id="login-title">Tu criterio<br />también protege.</h1><p class="login-intro">Ingresa a la consola de revisión de riesgo.</p>
+        <label class="form-field"><span>Llave de acceso</span><input name="llave" autocomplete="username" placeholder="analista01" required maxlength="64" /></label>
+        <label class="form-field"><span>Clave</span><input name="clave" autocomplete="current-password" type="password" placeholder="Tu clave de acceso" required maxlength="128" /></label>
+        <div class="login-feedback" id="login-feedback" role="alert"></div>
+        <button class="button button-login" id="login-submit" type="submit"><span>Entrar a la consola</span><span>→</span></button>
+        <button class="demo-entry" id="demo-entry" type="button"><span>Explorar con datos de ejemplo</span><span>↗</span></button>
+        <p class="demo-caption">Modo local · no requiere credenciales · las decisiones no se envían a la API</p>
+        <div class="login-security"><span class="lock-icon">⌑</span> Conexión protegida · Token de sesión temporal</div>
+      </form>
+      <div class="login-art"><div class="art-grid"></div><div class="art-rings"><i></i><i></i><i></i><div class="art-center"><span class="brand-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3.5 26 7v8.1c0 6.1-4.2 10.8-10 13.4C10.2 25.9 6 21.2 6 15.1V7l10-3.5Z"/><path d="m11.3 15.8 3.1 3.1 6.5-6.6"/></svg></span></div></div><div class="art-caption"><span>CONTROL EN TIEMPO REAL</span><strong>Antes de que el riesgo<br />se convierta en pérdida.</strong></div><div class="art-index">01 — 04 <span>YUMA PAY</span></div></div>
+    </dialog>
+
+    <dialog class="resolution-dialog" id="resolution-dialog" aria-labelledby="resolution-title">
+      <form method="dialog" class="resolution-card" id="resolution-form">
+        <button type="button" class="dialog-close" id="resolution-close" aria-label="Cerrar">×</button>
+        <div class="dialog-mark" id="resolution-mark">✓</div><div class="panel-kicker">REGISTRO DE DECISIÓN</div><h2 id="resolution-title">Resolver alerta</h2><p class="resolution-copy" id="resolution-copy">Esta decisión quedará registrada en la auditoría del caso.</p>
+        <div class="resolution-choice-label">CLASIFICACIÓN</div><div class="choice-group"><label class="choice-option"><input type="radio" name="resolucion" value="fraude_confirmado" checked /><span class="choice-dot"></span><span><strong>Fraude confirmado</strong><small>La operación presenta señales de fraude</small></span></label><label class="choice-option"><input type="radio" name="resolucion" value="falso_positivo" /><span class="choice-dot"></span><span><strong>Falso positivo</strong><small>La operación es legítima</small></span></label></div>
+        <label class="form-field"><span>Acción sobre la cuenta</span><select name="accion" id="resolution-action"><option value="monitorear">Monitorear</option><option value="liberar_transaccion">Liberar transacción</option><option value="mantener_retencion">Mantener retención</option><option value="bloquear_cuenta">Bloquear cuenta definitivamente</option></select></label>
+        <label class="form-field"><span>Nota del analista <small>(opcional)</small></span><textarea name="comentario" rows="3" maxlength="500" placeholder="Añade contexto para el siguiente analista…"></textarea></label>
+        <div class="resolution-feedback" id="resolution-feedback" role="alert"></div><div class="dialog-actions"><button type="button" class="button button-secondary" id="resolution-cancel">Volver al caso</button><button type="submit" class="button button-primary" id="resolution-submit">Confirmar decisión <span>→</span></button></div>
+      </form>
+    </dialog>
+    <script src="/app.js" defer></script>
+  </body>
+</html>

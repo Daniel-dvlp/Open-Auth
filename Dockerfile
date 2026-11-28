@@ -2,9 +2,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0.428 AS build
 WORKDIR /src
 COPY global.json Directory.Build.props EscudoYuma.sln ./
+COPY src/Yuma.Comun/Yuma.Comun.csproj src/Yuma.Comun/
 COPY src/EscudoYuma.Api/EscudoYuma.Api.csproj src/EscudoYuma.Api/
-COPY src/EscudoYuma.Api.Tests/EscudoYuma.Api.Tests.csproj src/EscudoYuma.Api.Tests/
 RUN dotnet restore src/EscudoYuma.Api/EscudoYuma.Api.csproj
+COPY src/Yuma.Comun/ src/Yuma.Comun/
 COPY src/EscudoYuma.Api/ src/EscudoYuma.Api/
 COPY training/artefactos/ training/artefactos/
 RUN dotnet publish src/EscudoYuma.Api/EscudoYuma.Api.csproj -c Release -o /app --no-restore

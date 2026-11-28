@@ -114,20 +114,46 @@ public class Alerta
     public DateTime? ResueltaUtc { get; set; }
 }
 
-/// <summary>Registro append-only; cada registro incluye el hash SHA-256 del anterior (cadena de evidencia).</summary>
-public class RegistroAuditoria
+/// <summary>
+/// Hecho del expediente (append-only): todo lo relevante para explicar una decisión, con esquema fijo y enlazado a la cadena de auditoría.
+/// Es la fuente ordenada que se narra con el LLM: el modelo de lenguaje nunca decide, solo describe estos hechos.
+/// Sin datos personales en claro (ids seudónimos, llaves enmascaradas).
+/// </summary>
+public class HechoExpediente
 {
     public long Id { get; set; }
-    public long Secuencia { get; set; }
+    /// <summary>transaccion | decision | evento_app | ingreso | alerta | desafio_fallido | resolucion | cambio_configuracion | alteracion_auditoria</summary>
+    public string Tipo { get; set; } = "";
     public DateTime FechaUtc { get; set; }
-    public string Evento { get; set; } = "";
-    public string Actor { get; set; } = "";
+    public string? IdCliente { get; set; }
+    public string? IdTransaccion { get; set; }
     public string IdCorrelacion { get; set; } = "";
-    public string Recurso { get; set; } = "";
-    /// <summary>JSON sin PII (llaves enmascaradas).</summary>
-    public string Detalle { get; set; } = "{}";
-    public string HashPrevio { get; set; } = "";
-    public string Hash { get; set; } = "";
+    /// <summary>billetera | escudo | analista | sistema</summary>
+    public string Fuente { get; set; } = "";
+    /// <summary>JSON con los datos del hecho (cifras concretas: montos, señales 0/1, puntaje, contribuciones).</summary>
+    public string DatosJson { get; set; } = "{}";
+    /// <summary>Códigos de normas aplicadas (R001-R012, POL-*, PISO-*, NORMA-*): ver CatalogoNormas.</summary>
+    public List<string> Normas { get; set; } = new();
+    public long? SecuenciaAuditoria { get; set; }
+    public string? HashAuditoria { get; set; }
+}
+
+/// <summary>Narrativa en lenguaje natural de una alerta (o de la actividad de un cliente), generada a partir de su expediente.</summary>
+public class NarrativaAlerta
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid IdAlerta { get; set; }
+    /// <summary>JSON validado: resumen, linea_de_tiempo, factores, normas_aplicadas, recomendacion_al_analista, confianza.</summary>
+    public string ContenidoJson { get; set; } = "{}";
+    /// <summary>ollama | plantilla (respaldo determinista cuando el LLM no está o su salida no pasa la validación).</summary>
+    public string Origen { get; set; } = "";
+    public string Modelo { get; set; } = "";
+    public string VersionPrompt { get; set; } = "";
+    /// <summary>SHA-256 del expediente narrado: permite saber si la narrativa quedó desactualizada.</summary>
+    public string HashExpediente { get; set; } = "";
+    public double LatenciaMs { get; set; }
+    public string? MotivoRespaldo { get; set; }
+    public DateTime CreadaUtc { get; set; }
 }
 
 internal static class JsonLista

@@ -1,4 +1,3 @@
-using EscudoYuma.Api.Shared.Features;
 using EscudoYuma.Api.Shared.Persistencia;
 using EscudoYuma.Api.Shared.Seguridad;
 using Microsoft.EntityFrameworkCore;

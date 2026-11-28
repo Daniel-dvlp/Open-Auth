@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "YumaBilletera.Api": {
+      "commandName": "Project",
+      "applicationUrl": "http://localhost:8082",
+      "environmentVariables": { "ASPNETCORE_ENVIRONMENT": "Development" }
+    }
+  }
+}

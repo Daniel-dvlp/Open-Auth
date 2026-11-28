@@ -1,0 +1,651 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Billetera Yuma API",
+    "description": "Billetera digital colombiana (COP, hora de Colombia). Cada operaciÃ³n que mueve dinero se califica antes en el Escudo Yuma. JSON en snake_case; errores como ProblemDetails; Authorization: Bearer <token>; Idempotency-Key obligatorio al mover dinero.",
+    "version": "v1"
+  },
+  "paths": {
+    "/v1/auth/otp": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Features.Auth.ConfirmarIngreso.ConfirmarOtpRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/v1/auth/biometria": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Features.Auth.ConfirmarIngreso.ConfirmarBiometriaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/v1/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Features.Auth.Login.LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/v1/auth/refresh": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Features.Auth.Refrescar.RefrescarRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/v1/cuentas/me": {
+      "get": {
+        "tags": [
+          "Cuentas"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/v1/cuentas/me/movimientos": {
+      "get": {
+        "tags": [
+          "Cuentas"
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/v1/dev/otp/{id}": {
+      "get": {
+        "tags": [
+          "Desarrollo"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/v1/dev/cambio-sim": {
+      "post": {
+        "tags": [
+          "Desarrollo"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Features.Desarrollo.Simulaciones.SimularCambioSimRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/v1/destinatarios": {
+      "post": {
+        "tags": [
+          "Destinatarios"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Features.Destinatarios.Inscribir.InscribirDestinatarioRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Destinatarios"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/v1/dispositivos": {
+      "get": {
+        "tags": [
+          "Dispositivos"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Dispositivos"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Features.Dispositivos.Registrar.RegistrarDispositivoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/v1/internas/resoluciones": {
+      "post": {
+        "tags": [
+          "Internas"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/v1/pagos/qr": {
+      "post": {
+        "tags": [
+          "Pagos"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Features.Pagos.PagarQr.PagarQrRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/v1/pagos/servicios": {
+      "post": {
+        "tags": [
+          "Pagos"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Features.Pagos.PagarServicios.PagarServiciosRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/v1/recargas": {
+      "post": {
+        "tags": [
+          "Recargas"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Features.Recargas.RecargarCelular.RecargarCelularRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/v1/seguridad/clave": {
+      "post": {
+        "tags": [
+          "Seguridad"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Features.Seguridad.CambiarClave.CambiarClaveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/v1/transferencias/{id}/biometria": {
+      "post": {
+        "tags": [
+          "Transferencias"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Features.Transferencias.ConfirmarBiometria.ConfirmarBiometriaTransferenciaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/v1/transferencias/{id}": {
+      "get": {
+        "tags": [
+          "Transferencias"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/v1/transferencias": {
+      "post": {
+        "tags": [
+          "Transferencias"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Features.Transferencias.Crear.CrearTransferenciaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Features.Auth.ConfirmarIngreso.ConfirmarBiometriaRequest": {
+        "type": "object",
+        "properties": {
+          "id_verificacion": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "resultado_simulado": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Features.Auth.ConfirmarIngreso.ConfirmarOtpRequest": {
+        "type": "object",
+        "properties": {
+          "id_verificacion": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "codigo": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Features.Auth.Login.LoginRequest": {
+        "type": "object",
+        "properties": {
+          "llave": {
+            "type": "string",
+            "nullable": true
+          },
+          "clave": {
+            "type": "string",
+            "nullable": true
+          },
+          "id_dispositivo": {
+            "type": "string",
+            "nullable": true
+          },
+          "departamento_ip": {
+            "type": "string",
+            "nullable": true
+          },
+          "sistema_operativo": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Features.Auth.Refrescar.RefrescarRequest": {
+        "type": "object",
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Features.Desarrollo.Simulaciones.SimularCambioSimRequest": {
+        "type": "object",
+        "properties": {
+          "id_cliente": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Features.Destinatarios.Inscribir.InscribirDestinatarioRequest": {
+        "type": "object",
+        "properties": {
+          "alias": {
+            "type": "string",
+            "nullable": true
+          },
+          "tipo_destino": {
+            "type": "string",
+            "nullable": true
+          },
+          "llave": {
+            "type": "string",
+            "nullable": true
+          },
+          "entidad": {
+            "type": "string",
+            "nullable": true
+          },
+          "numero_producto": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Features.Dispositivos.Registrar.RegistrarDispositivoRequest": {
+        "type": "object",
+        "properties": {
+          "id_dispositivo": {
+            "type": "string",
+            "nullable": true
+          },
+          "sistema_operativo": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Features.Pagos.PagarQr.PagarQrRequest": {
+        "type": "object",
+        "properties": {
+          "codigo_comercio": {
+            "type": "string",
+            "nullable": true
+          },
+          "monto_cop": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Features.Pagos.PagarServicios.PagarServiciosRequest": {
+        "type": "object",
+        "properties": {
+          "id_servicio": {
+            "type": "string",
+            "nullable": true
+          },
+          "referencia_pago": {
+            "type": "string",
+            "nullable": true
+          },
+          "monto_cop": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Features.Recargas.RecargarCelular.RecargarCelularRequest": {
+        "type": "object",
+        "properties": {
+          "id_operador": {
+            "type": "string",
+            "nullable": true
+          },
+          "celular": {
+            "type": "string",
+            "nullable": true
+          },
+          "monto_cop": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Features.Seguridad.CambiarClave.CambiarClaveRequest": {
+        "type": "object",
+        "properties": {
+          "clave_actual": {
+            "type": "string",
+            "nullable": true
+          },
+          "clave_nueva": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Features.Transferencias.ConfirmarBiometria.ConfirmarBiometriaTransferenciaRequest": {
+        "type": "object",
+        "properties": {
+          "id_verificacion": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "resultado_simulado": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Features.Transferencias.Crear.CrearTransferenciaRequest": {
+        "type": "object",
+        "properties": {
+          "id_destinatario": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "llave": {
+            "type": "string",
+            "nullable": true
+          },
+          "monto_cop": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

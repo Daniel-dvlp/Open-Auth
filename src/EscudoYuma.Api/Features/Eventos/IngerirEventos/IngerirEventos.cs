@@ -1,7 +1,7 @@
 using System.Globalization;
 using EscudoYuma.Api.Shared.Auditoria;
 using EscudoYuma.Api.Shared.Estado;
-using EscudoYuma.Api.Shared.Features;
+using EscudoYuma.Api.Shared.Expediente;
 using EscudoYuma.Api.Shared.Seguridad;
 using FluentValidation;
 
@@ -43,14 +43,22 @@ public sealed class IngerirEventosValidator : AbstractValidator<IngerirEventosRe
 /// Interno: solo rol servicio. Los eventos deben llegar en orden cronológico respecto de las transacciones (el estado no se reordena);
 /// dentro de un lote se ordenan por (fecha_hora, id_evento).
 /// </summary>
-public sealed class ManejadorIngerirEventos(IEstadoEnLinea estado, ServicioAuditoria auditoria)
+public sealed class ManejadorIngerirEventos(IEstadoEnLinea estado, ServicioAuditoria auditoria, RegistroExpediente expediente, ContextoAuditoria contexto)
 {
     public async Task<IngerirEventosResponse> EjecutarAsync(IngerirEventosRequest req, CancellationToken ct)
     {
         foreach (var e in req.Eventos.OrderBy(e => e.FechaHora, StringComparer.Ordinal).ThenBy(e => e.IdEvento, StringComparer.Ordinal))
             estado.ProcesarEvento(e);
         // Trazabilidad: quién (actor = sub del token de servicio) alteró el estado en línea y cuántos eventos; sin datos personales.
-        await auditoria.RegistrarAsync("eventos_ingeridos", "eventos", new { cantidad = req.Eventos.Count, clientes = req.Eventos.Select(e => e.IdCliente).Distinct().Count() }, ct: ct);
+        var eslabon = await auditoria.RegistrarAsync("eventos_ingeridos", "eventos", new { cantidad = req.Eventos.Count, clientes = req.Eventos.Select(e => e.IdCliente).Distinct().Count() }, ct: ct);
+        // Cada evento al expediente del cliente, con su hora real (Colombia -> UTC) para que la línea de tiempo quede en orden.
+        foreach (var e in req.Eventos)
+            expediente.Registrar(TiposHecho.EventoApp, FuentesHecho.Billetera, e.IdCliente, null, new
+            {
+                id_evento = e.IdEvento, fecha_hora = e.FechaHora, tipo_evento = e.TipoEvento, resultado = e.Resultado ?? "exitoso",
+                id_dispositivo = e.IdDispositivo, sistema_operativo = e.SistemaOperativo, departamento_ip = e.DepartamentoIp,
+            }, null, contexto.IdCorrelacion, eslabon,
+            DateTime.SpecifyKind(DateTime.ParseExact(e.FechaHora, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture).AddHours(5), DateTimeKind.Utc));
         return new IngerirEventosResponse(req.Eventos.Count);
     }
 }

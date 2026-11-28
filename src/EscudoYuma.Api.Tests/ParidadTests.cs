@@ -1,5 +1,4 @@
 using System.Globalization;
-using EscudoYuma.Api.Shared.Datos;
 using EscudoYuma.Api.Shared.Estado;
 using EscudoYuma.Api.Shared.Reglas;
 using EscudoYuma.Api.Shared.Scoring;

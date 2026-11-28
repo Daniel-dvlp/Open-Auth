@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Infraestructura transversal compartida por EscudoYuma.Api y YumaBilletera.Api (vertical slice, validación, errores,
+       correlación, cabeceras seguras y cadena de auditoría). Sin lógica de negocio. -->
+  <PropertyGroup>
+    <RootNamespace>Yuma.Comun</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="11.*" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.*" />
+    <PackageReference Include="prometheus-net.AspNetCore" Version="8.*" />
+  </ItemGroup>
+</Project>
