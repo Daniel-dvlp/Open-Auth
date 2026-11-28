@@ -98,13 +98,16 @@ async function api(path, options = {}) {
   let response;
   try { response = await fetch(path, { ...options, headers }); }
   catch { throw new Error('No se pudo conectar con la API. Comprueba que el backend esté levantado y vuelve a intentar.'); }
-  if (response.status === 401) {
-    signOut();
-    throw new Error('Tu sesión terminó. Inicia sesión para continuar.');
-  }
   const text = await response.text();
   let payload = null;
   try { payload = text ? JSON.parse(text) : null; } catch { payload = text; }
+  // Un 401 con sesión abierta es un token vencido; sin sesión (el propio ingreso) es una llave o clave incorrecta.
+  if (response.status === 401 && state.token) {
+    signOut();
+    throw new Error('Tu sesión terminó. Inicia sesión para continuar.');
+  }
+  if (response.status === 401) throw new Error(payload?.detail || 'La llave o la clave no son correctas.');
+  if (response.status === 429) throw new Error('Demasiados intentos con esta llave. Por seguridad se bloquea 5 minutos; espera y vuelve a intentar (o usa otro analista).');
   if (!response.ok) {
     const message = payload?.detail || payload?.title || (response.status === 403 ? 'Esta cuenta no tiene rol de analista.' : `La solicitud falló (${response.status}).`);
     throw new Error(message);
@@ -277,6 +280,7 @@ async function handleLogin(event) {
   button.disabled = true;
   button.innerHTML = '<span>Verificando acceso…</span><span class="button-spinner"></span>';
   feedback.textContent = '';
+  state.token = ''; // un token vencido de otra sesión no debe confundirse con una clave incorrecta
   try {
     const result = await api('/v1/auth/login', {
       method: 'POST',
