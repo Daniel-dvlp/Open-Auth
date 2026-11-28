@@ -371,6 +371,8 @@ public sealed class TrabajadorIntegracion(IServiceScopeFactory fabrica, IOptions
                 new { id_transaccion = t.IdTransaccion, decision = d.Decision, estado_final = t.Estado }, actor: "trabajador_integracion", ct: ct);
         }
 
+        await VencerVerificacionesAsync(db, procesador, sp.GetRequiredService<ServicioAuditoria>(), ahora, ct);
+
         if (ahora - _ultimaConciliacion < TimeSpan.FromMinutes(1)) return;
         _ultimaConciliacion = ahora;
         var sync = sp.GetRequiredService<IEscudoSincronizacion>();
@@ -384,6 +386,39 @@ public sealed class TrabajadorIntegracion(IServiceScopeFactory fabrica, IOptions
             catch (EscudoNoDisponibleException) { break; }
             if (caso is { EstadoAlerta: "resuelta", Resolucion: { } r, Accion: { } a })
                 await aplicador.AplicarAsync(id, r, a, caso.BloqueoDefinitivoCliente, ct);
+        }
+    }
+
+    /// <summary>
+    /// Verificación de transferencia vencida sin respuesta (el cliente cerró la app o abandonó la verificación facial): se trata como no
+    /// superada. La operación pasa a revisión con el monto reservado y el caso llega al analista por la bandeja (desafio_fallido). Sin este
+    /// barrido el dinero quedaría reservado indefinidamente y nadie revisaría una operación que el Escudo ya marcó como riesgosa.
+    /// </summary>
+    public static async Task VencerVerificacionesAsync(BilleteraDbContext db, ProcesadorOperacion procesador, ServicioAuditoria auditoria,
+        DateTime ahora, CancellationToken ct)
+    {
+        var vencidas = await db.Transferencias
+            .Where(t => t.Estado == EstadosTransferencia.RequiereVerificacion && t.CreadaUtc < ahora.AddSeconds(-10)
+                        && !db.Verificaciones.Any(v => v.Proposito == PropositosVerificacion.Transferencia && v.Referencia == t.IdTransaccion
+                                                       && !v.Resuelta && v.ExpiraUtc > ahora))
+            .OrderBy(t => t.CreadaUtc).Take(50).ToListAsync(ct);
+        foreach (var t in vencidas)
+        {
+            var abiertas = await db.Verificaciones
+                .Where(v => v.Proposito == PropositosVerificacion.Transferencia && v.Referencia == t.IdTransaccion && !v.Resuelta).ToListAsync(ct);
+            abiertas.ForEach(v => v.Resuelta = true);
+            procesador.PasarARevisionPorVerificacion(t, "El cliente no completó la verificación facial a tiempo.");
+            t.Version = Guid.NewGuid();
+            try { await db.SaveChangesAsync(ct); }
+            catch (DbUpdateConcurrencyException)
+            {
+                // El cliente respondió la verificación en ese mismo instante: gana su respuesta.
+                db.ChangeTracker.Clear();
+                continue;
+            }
+            MetricasBilletera.Operaciones.WithLabels(t.TipoOperacion, t.Estado).Inc();
+            await auditoria.RegistrarAsync("operacion_verificacion_vencida", "operaciones/" + t.IdTransaccion,
+                new { id_transaccion = t.IdTransaccion, estado_final = t.Estado }, actor: "trabajador_integracion", ct: ct);
         }
     }
 }

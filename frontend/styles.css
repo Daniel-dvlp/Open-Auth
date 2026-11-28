@@ -558,3 +558,19 @@ dialog::backdrop { background: rgba(9, 21, 29, .6); backdrop-filter: blur(3px); 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Narrativa del caso (IA local, Ollama) */
+.narrative-section { border-left: 2px solid #438a74; padding-left: 10px; }
+.narrative-loader { display: inline-block; width: 9px; height: 9px; vertical-align: -1px; margin-right: 4px; }
+.narrative-summary { margin: 0 0 8px; color: #33433f; font-size: 10px; line-height: 1.55; }
+.narrative-block { margin: 0 0 8px; color: #6e7d81; font-size: 9px; line-height: 1.5; }
+.narrative-block > strong, .narrative-block > summary { display: block; margin-bottom: 3px; color: #33433f; font-size: 9px; font-weight: 600; cursor: default; }
+.narrative-block > summary { cursor: pointer; }
+.narrative-block p { margin: 0; }
+.narrative-list { margin: 0; padding-left: 14px; }
+.narrative-list li { margin: 2px 0; }
+.narrative-origin { margin: 6px 0 0; color: #9da7a3; font-size: 8px; line-height: 1.5; }
+
+/* Caso recién llegado (últimos 15 min) */
+.alert-row.is-new { box-shadow: inset 3px 0 0 #2f7dd1; }
+.new-badge { display: inline-block; margin-left: 4px; padding: 0 5px; border-radius: 6px; background: #e3eefb; color: #1f5fa8; font-size: 7px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; vertical-align: 1px; }

@@ -358,8 +358,10 @@ function renderQueue() {
   container.innerHTML = visible.map((item, index) => {
     const selected = item.id === state.selectedId;
     const risk = riskPercent(item.puntaje);
-    return `<button type="button" class="alert-row ${selected ? 'selected' : ''}" data-alert-id="${escapeHtml(item.id)}" style="--row-index:${Math.min(index, 8)}">
-      <span class="alert-identity"><span class="row-mark ${risk >= 75 ? 'mark-high' : risk >= 45 ? 'mark-mid' : 'mark-low'}">${risk >= 75 ? '!' : '·'}</span><span class="row-main"><strong>${escapeHtml(item.id_transaccion || 'Transacción sin ID')}</strong><small>${escapeHtml(item.id_cliente || 'Cliente sin ID')} <i>·</i> ${timeAgo(item.creada_utc)}</small></span></span>
+    // La cola se ordena por riesgo × monto; un caso de los últimos 15 min se marca "Nuevo" para encontrarlo aunque no quede arriba.
+    const isNew = state.view === 'pendiente' && Date.now() - new Date(item.creada_utc).getTime() < 15 * 60_000;
+    return `<button type="button" class="alert-row ${selected ? 'selected' : ''} ${isNew ? 'is-new' : ''}" data-alert-id="${escapeHtml(item.id)}" style="--row-index:${Math.min(index, 8)}">
+      <span class="alert-identity"><span class="row-mark ${risk >= 75 ? 'mark-high' : risk >= 45 ? 'mark-mid' : 'mark-low'}">${risk >= 75 ? '!' : '·'}</span><span class="row-main"><strong>${escapeHtml(item.id_transaccion || 'Transacción sin ID')}</strong><small>${escapeHtml(item.id_cliente || 'Cliente sin ID')} <i>·</i> ${timeAgo(item.creada_utc)}${isNew ? ' <b class="new-badge">Nuevo</b>' : ''}</small></span></span>
       <span><span class="decision-pill decision-${escapeHtml(item.decision)}"><i></i>${escapeHtml(prettyDecision(item.decision))}</span></span>
       <span class="row-amount">${money(item.monto_cop)}</span>
       <span class="row-risk"><strong class="risk-number ${risk >= 75 ? 'risk-danger' : risk >= 45 ? 'risk-warn' : ''}">${formattedRisk(item.puntaje)}%</strong><span class="risk-track"><i style="width:${risk}%"></i></span></span>
@@ -380,7 +382,16 @@ async function loadAlerts({ quiet = false } = {}) {
   if (!quiet) $('#alert-list').innerHTML = '<div class="loading-state"><span class="loader"></span><span>Actualizando cola…</span></div>';
   try {
     const payload = await api(`/v1/alertas?estado=${state.view}&limite=200`);
+    const previous = new Set((state.alerts || []).map(item => item.id));
+    const fresh = quiet && state.view === 'pendiente' && previous.size ? (payload.alertas || []).filter(item => !previous.has(item.id)) : [];
+    const signature = (payload.alertas || []).map(item => `${item.id}:${item.estado}`).join('|');
+    if (quiet && signature === state.alertsSignature) {
+      $('#last-updated').textContent = `Actualizado ${new Intl.DateTimeFormat('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date())}`;
+      return; // sin cambios: no se repinta (conserva la narrativa abierta y la posición)
+    }
+    state.alertsSignature = signature;
     state.alerts = payload.alertas || [];
+    if (fresh.length) toast(`${fresh.length === 1 ? 'Nuevo caso' : `${fresh.length} casos nuevos`} en la cola: ${fresh.slice(0, 2).map(item => item.id_cliente).join(', ')}`);
     state.total = payload.total ?? state.alerts.length;
     state.visibleCount = 7;
     if (!quiet) toast(state.demo ? 'Ejemplos ficticios cargados · solo en esta sesión' : state.alerts.length ? `${state.alerts.length} ${state.view === 'pendiente' ? 'alertas pendientes' : 'casos resueltos'} cargados` : 'Cola actualizada');
@@ -399,9 +410,51 @@ function selectAlert(id, rerender = true) {
   state.selectedId = id;
   state.selectedAlert = state.alerts.find(item => item.id === id) || null;
   state.reputation = null;
+  state.narrative = null;
+  clearTimeout(state.narrativeTimer);
   if (rerender) renderQueue();
   else renderDetail(state.selectedAlert);
-  if (state.selectedAlert) loadReputation(state.selectedAlert.id_cliente);
+  if (state.selectedAlert) {
+    loadReputation(state.selectedAlert.id_cliente);
+    loadNarrative(state.selectedAlert.id);
+  }
+}
+
+// Narrativa del caso redactada por la IA local (Ollama) y validada contra el expediente. Si todavía está en cola, se reintenta.
+async function loadNarrative(idAlerta) {
+  if (state.demo || !idAlerta) return;
+  try {
+    const result = await api(`/v1/alertas/${encodeURIComponent(idAlerta)}/narrativa`);
+    if (state.selectedAlert?.id !== idAlerta) return;
+    state.narrative = result?.estado === 'en_cola' ? { pending: true } : result;
+    renderDetail(state.selectedAlert);
+    if (state.narrative.pending) state.narrativeTimer = setTimeout(() => loadNarrative(idAlerta), 4000);
+  } catch (error) {
+    if (state.selectedAlert?.id !== idAlerta) return;
+    state.narrative = { error: error.message };
+    renderDetail(state.selectedAlert);
+  }
+}
+
+function narrativeSection() {
+  const n = state.narrative;
+  if (state.demo) return '';
+  const heading = '<div class="section-heading"><h3>Resumen del caso · IA local</h3><span>Ollama · validado contra el expediente</span></div>';
+  if (!n || n.pending) return `<div class="detail-section narrative-section">${heading}<p class="muted-note"><span class="loader narrative-loader"></span> La IA local está redactando el resumen del expediente…</p></div>`;
+  if (n.error) return `<div class="detail-section narrative-section">${heading}<p class="muted-note">No fue posible obtener la narrativa: ${escapeHtml(n.error)}</p></div>`;
+  const c = n.contenido || {};
+  const origin = n.origen === 'ollama'
+    ? `Redactó ${escapeHtml(n.modelo || 'Ollama')} en ${(Number(n.latencia_ms || 0) / 1000).toFixed(1)} s`
+    : `Plantilla del sistema${n.motivo_respaldo ? ` (la IA no pasó la validación: ${escapeHtml(n.motivo_respaldo)})` : ''}`;
+  const list = items => `<ul class="narrative-list">${items.join('')}</ul>`;
+  return `<div class="detail-section narrative-section">${heading}
+    <p class="narrative-summary">${escapeHtml(c.resumen || '')}</p>
+    ${(c.factores || []).length ? `<div class="narrative-block"><strong>Factores</strong>${list(c.factores.map(f => `<li>${escapeHtml(f)}</li>`))}</div>` : ''}
+    ${(c.normas_aplicadas || []).length ? `<div class="narrative-block"><strong>Normas aplicadas</strong>${list(c.normas_aplicadas.map(x => `<li><b>${escapeHtml(x.codigo)}</b> · ${escapeHtml(x.como_aplica)}</li>`))}</div>` : ''}
+    ${c.recomendacion_al_analista ? `<div class="narrative-block"><strong>Recomendación</strong><p>${escapeHtml(c.recomendacion_al_analista)}</p></div>` : ''}
+    ${(c.linea_de_tiempo || []).length ? `<details class="narrative-block"><summary>Línea de tiempo del expediente (${c.linea_de_tiempo.length} hechos)</summary>${list(c.linea_de_tiempo.map(h => `<li><span class="mono-value">${escapeHtml(h.fecha)}</span> ${escapeHtml(h.hecho)}</li>`))}</details>` : ''}
+    <p class="narrative-origin">${origin}${n.desactualizada ? ' · el expediente cambió después de redactarla' : ''}. La IA no decide: describe lo que el Escudo ya decidió.</p>
+  </div>`;
 }
 
 async function loadReputation(idCuenta) {
@@ -640,6 +693,7 @@ function renderDetail(item) {
     <div class="detail-title-row"><div><h2>${escapeHtml(item.id_transaccion || 'Transacción')}</h2><p class="detail-created">${icon('clock')} Registrada ${timeAgo(item.creada_utc)}</p></div><span class="decision-pill decision-${escapeHtml(item.decision)}"><i></i>${escapeHtml(prettyDecision(item.decision))}</span></div>
     <div class="risk-hero"><div class="risk-hero-copy"><span>PUNTAJE DE RIESGO</span><strong class="${risk >= 75 ? 'risk-danger' : risk >= 45 ? 'risk-warn' : ''}">${formattedRisk(item.puntaje)}<small>/100</small></strong><p>${risk >= 75 ? 'Señales de riesgo elevadas' : risk >= 45 ? 'Revisión recomendada' : 'Riesgo moderado'}</p></div><div class="risk-gauge" style="--risk-angle:${risk * 3.6}deg"><div><strong>${formattedRisk(item.puntaje)}<small>%</small></strong><span>RIESGO</span></div></div></div>
     <div class="detail-section"><div class="section-heading"><h3>Señales que explican la decisión</h3><span>${reasons.length} ${reasons.length === 1 ? 'señal' : 'señales'}</span></div>${reasons.length ? `<ul class="reason-list">${reasons.map((reason, index) => `<li><span class="reason-index">${String(index + 1).padStart(2, '0')}</span><span>${escapeHtml(reason)}</span></li>`).join('')}</ul>` : '<p class="muted-note">La API no reportó razones para esta alerta.</p>'}</div>
+    ${narrativeSection()}
     <div class="detail-section account-section"><div class="section-heading"><h3>Cuenta de origen</h3><span class="account-live"><i></i> ${state.demo ? 'Ejemplo local' : 'Verificada'}</span></div><div class="account-card"><div class="account-avatar">${icon('user')}</div><div class="account-info"><strong>${escapeHtml(item.id_cliente || 'Cliente sin ID')}</strong><small>Identificador de cuenta</small></div><div class="account-rep"><span>REPUTACIÓN</span><strong class="${repScore !== null && repScore < 40 ? 'risk-danger' : ''}">${repScore === null ? (rep?.error ? '—' : '···') : `${repScore}`}<small>${repScore === null ? '' : '/100'}</small></strong></div></div>${rep?.bloqueo_definitivo ? '<div class="blocked-banner">Esta cuenta tiene bloqueo definitivo por decisión de analista.</div>' : ''}${rep?.error ? `<p class="muted-note">No fue posible consultar reputación: ${escapeHtml(rep.error)}</p>` : ''}${rep?.senales?.length ? `<div class="account-signals">${rep.senales.slice(0, 3).map(s => `<span>${escapeHtml(s.replaceAll('_', ' '))}</span>`).join('')}</div>` : ''}</div>
     <div class="detail-section transaction-section"><div class="section-heading"><h3>Resumen de operación</h3><span>${escapeHtml(fullDate(item.creada_utc))}</span></div><div class="transaction-summary"><div><span>MONTO</span><strong>${money(item.monto_cop)}</strong></div><div><span>CLIENTE</span><strong>${escapeHtml(item.id_cliente || '—')}</strong></div><div><span>ID DE ALERTA</span><strong class="mono-value">${escapeHtml(item.id || '—')}</strong></div></div></div>
     ${!isResolved ? `<div class="review-note"><span class="review-note-icon">✳</span><span><strong>La decisión final es tuya</strong><small>${state.demo ? 'En el entorno real, toda acción queda auditada.' : 'El modelo orienta la revisión. Toda acción queda auditada.'}</small></span></div><button class="button button-resolve" id="resolve-alert-button" type="button"><span>Registrar resolución</span><span>→</span></button>` : `<div class="resolved-note"><span>✓</span> ${state.demo ? 'Resolución de ejemplo · solo local' : 'Resolución registrada en auditoría'}</div>`}
@@ -775,4 +829,4 @@ if (state.token) {
   renderSession();
   loadAlerts();
 } else showLogin();
-setInterval(() => { if (state.token && (state.activePage === 'pendiente' || state.activePage === 'resuelta')) loadAlerts({ quiet: true }); }, 45_000);
+setInterval(() => { if (state.token && (state.activePage === 'pendiente' || state.activePage === 'resuelta')) loadAlerts({ quiet: true }); }, 8_000); // casi en tiempo real: los casos nuevos aparecen sin recargar

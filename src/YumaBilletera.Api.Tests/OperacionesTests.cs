@@ -1,8 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 using YumaBilletera.Api.Shared.Contabilidad;
+using YumaBilletera.Api.Shared.Escudo;
 using YumaBilletera.Api.Shared.Persistencia;
+using YumaBilletera.Api.Shared.Seguridad;
 
 namespace YumaBilletera.Api.Tests;
 
@@ -118,6 +121,30 @@ public class OperacionesTests
         Assert.Equal("en_revision", r.GetProperty("estado").GetString());
         Assert.Equal((1_000_000L, 300_000L), Cuenta(f, "C00010"));
         Assert.Contains(f.ConBd(db => db.Bandeja.Select(b => b.Tipo).ToList()), t => t == "desafio_fallido");
+    }
+
+    [Fact]
+    public async Task Verificacion_abandonada_vence_y_pasa_al_analista_con_el_dinero_reservado()
+    {
+        var (f, c) = await PrepararAsync();
+        using var fabrica = f;
+        f.Escudo.Decidir = _ => FakeEscudo.D("desafiar", "verificar");
+        var j = await Json(await Transferir(c, 300_000));
+        var id = j.GetProperty("id_transaccion").GetString()!;
+        var ahora = DateTime.UtcNow;
+
+        // Mientras la verificación esté vigente, el barrido no la toca: el cliente aún puede retomarla.
+        await f.ConBdAsync(async (db, sp) => await TrabajadorIntegracion.VencerVerificacionesAsync(db,
+            sp.GetRequiredService<YumaBilletera.Api.Shared.Operaciones.ProcesadorOperacion>(), sp.GetRequiredService<ServicioAuditoria>(), ahora.AddMinutes(1), default));
+        Assert.Equal("requiere_verificacion", f.ConBd(db => db.Transferencias.Single(t => t.IdTransaccion == id).Estado));
+
+        // El cliente cerró la verificación y no volvió: al vencer, la operación pasa a revisión y el caso va al Escudo.
+        await f.ConBdAsync(async (db, sp) => await TrabajadorIntegracion.VencerVerificacionesAsync(db,
+            sp.GetRequiredService<YumaBilletera.Api.Shared.Operaciones.ProcesadorOperacion>(), sp.GetRequiredService<ServicioAuditoria>(), ahora.AddMinutes(10), default));
+        Assert.Equal("en_revision", f.ConBd(db => db.Transferencias.Single(t => t.IdTransaccion == id).Estado));
+        Assert.Equal((1_000_000L, 300_000L), Cuenta(f, "C00010")); // el dinero no salió
+        Assert.Contains(f.ConBd(db => db.Bandeja.Select(b => b.Tipo).ToList()), t => t == "desafio_fallido");
+        Assert.True(f.ConBd(db => db.Verificaciones.Where(v => v.Referencia == id).All(v => v.Resuelta)));
     }
 
     [Fact]

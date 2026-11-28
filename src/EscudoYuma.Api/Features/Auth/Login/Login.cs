@@ -2,6 +2,7 @@ using EscudoYuma.Api.Shared.Auditoria;
 using EscudoYuma.Api.Shared.Estado;
 using EscudoYuma.Api.Shared.Observabilidad;
 using EscudoYuma.Api.Shared.Persistencia;
+using EscudoYuma.Api.Shared.Scoring;
 using EscudoYuma.Api.Shared.Seguridad;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
@@ -61,12 +62,14 @@ public interface IScoreIngreso
 ///   registro de dispositivo en las últimas 24 h                        0,10
 ///   departamento de la IP distinto al habitual (moda, >= 3 obs.)       0,20
 ///   hora de madrugada (00:00-04:59)                                    0,08
+///   conexión fuera de Colombia (extensión .NET; reemplaza la anterior)  0,40
 /// </summary>
 public sealed class ScoreIngresoLogin : IScoreIngreso
 {
     public const double PesoDispositivoNoVisto = 0.30, PesoFallido1h = 0.12, TopeFallido1h = 0.36, PesoFallido24hExtra = 0.03, TopeFallido24hExtra = 0.09;
     public const double PesoCambioSim = 0.25, PesoCambioClave = 0.20, PesoRegistroDispositivo = 0.10, PesoIpDistinta = 0.20, PesoMadrugada = 0.08;
     public const int MinObservacionesIp = 3;
+    public const double PesoIpExtranjera = 0.40;
 
     public ResultadoScoreIngreso Calcular(ContextoLogin c)
     {
@@ -92,7 +95,14 @@ public sealed class ScoreIngresoLogin : IScoreIngreso
         if (c.CambioSim48h) { score += PesoCambioSim; razones.Add("Cambio de SIM en las últimas 48 horas"); }
         if (c.CambioClave24h) { score += PesoCambioClave; razones.Add("Cambio de clave en las últimas 24 horas"); }
         if (c.Registro24h) { score += PesoRegistroDispositivo; razones.Add("Dispositivo registrado en las últimas 24 horas"); }
-        if (!string.IsNullOrEmpty(c.DepartamentoIp) && c.IpHabitual is not null && c.ObservacionesIp >= MinObservacionesIp && c.DepartamentoIp != c.IpHabitual)
+        // Extensión de .NET (no está en score_login.py: los datos del caso solo traen departamentos colombianos). Por sí sola exige
+        // verificación (0,40 = umbral OTP); con un dispositivo no visto llega a 0,70 = bloqueo temporal. Reemplaza a "IP distinta".
+        if (UbicacionIp.EsFueraDeColombia(c.DepartamentoIp))
+        {
+            score += PesoIpExtranjera;
+            razones.Add($"Ingreso desde fuera de Colombia ({c.DepartamentoIp})");
+        }
+        else if (!string.IsNullOrEmpty(c.DepartamentoIp) && c.IpHabitual is not null && c.ObservacionesIp >= MinObservacionesIp && c.DepartamentoIp != c.IpHabitual)
         {
             score += PesoIpDistinta;
             razones.Add($"Ubicación de la IP ({c.DepartamentoIp}) distinta a la habitual ({c.IpHabitual})");

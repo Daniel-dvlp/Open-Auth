@@ -60,6 +60,7 @@ public static class CatalogoNormas
         new("PISO-DISPOSITIVO-SIM-CLAVE-VACIADO", "Piso de seguridad", "Dispositivo nuevo con cambio de SIM o de clave y casi todo el saldo hacia un destino nuevo: pasa a un analista."),
         new("PISO-VACIADO", "Piso de seguridad", "Transferencia que vacía el saldo hacia un destino nuevo (posible ingeniería social)."),
         new("PISO-DESTINO-REPUTACION", "Piso de seguridad", "Destino que recibe de muchos remitentes distintos y tiene reputación baja."),
+        new("PISO-IP-EXTRANJERA", "Piso de seguridad", "Dinero que sale con una conexión desde fuera de Colombia: se verifica que sea el titular."),
         new("ESC-INGRESO", "Escalamiento por ingreso riesgoso", "Un ingreso riesgoso sube una aprobación a verificación; nunca baja una decisión."),
         new("NORMA-AUTENTICACION-REFORZADA", "Autenticación reforzada", "Riesgo medio: biometría facial; si no la supera, el caso pasa a un analista."),
         new("NORMA-REVISION-POSTERIOR", "Revisión posterior por patrón de estafa", "Riesgo medio sin señales de toma de cuenta: tras la verificación la operación sigue, pero el caso pasa a un analista."),
@@ -74,6 +75,7 @@ public static class CatalogoNormas
         PisoSeguridad.DispositivoSimClaveVaciado => "PISO-DISPOSITIVO-SIM-CLAVE-VACIADO",
         PisoSeguridad.Vaciado => "PISO-VACIADO",
         PisoSeguridad.DestinoReputacionBaja => "PISO-DESTINO-REPUTACION",
+        PisoSeguridad.IpExtranjera => "PISO-IP-EXTRANJERA",
         _ => "",
     };
 }

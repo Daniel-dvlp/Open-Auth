@@ -627,6 +627,7 @@
           descripcion: description,
         };
         sessionStorage.setItem(accountStorageKey('yuma-wallet-pending-transaction'), JSON.stringify(state.pendingTransfer));
+        renderReceipt(result); // de nuevo, ya con la verificación pendiente: muestra «Confirmar que soy yo»
         document.getElementById('transfer-biometric-copy').textContent = result.mensaje || 'Confirma esta transferencia con la verificación facial simulada.';
         openDialog('transfer-biometric');
       } else {
@@ -719,9 +720,21 @@
     const card = document.getElementById('transfer-receipt');
     const copy = statusCopy(result?.estado);
     const destination = state.pendingTransfer?.llave_destino || result?.llave_destino || document.getElementById('transfer-phone').value || result?.id_destino;
-    const canCheck = result?.estado === 'en_revision';
+    const canCheck = result?.estado === 'en_revision' || result?.estado === 'requiere_verificacion';
+    // Verificación pendiente: el cliente puede volver a abrirla aunque haya cerrado el diálogo (vence a los pocos minutos y pasa a revisión).
+    const canVerify = result?.estado === 'requiere_verificacion' && state.pendingTransfer?.id_transaccion === result?.id_transaccion;
+    const actions = [
+      canVerify ? `<button class="yb-button yb-button-primary" type="button" data-reopen-verification="${escapeHtml(result.id_transaccion)}">Confirmar que soy yo</button>` : '',
+      canCheck ? `<button class="yb-button yb-button-secondary" type="button" data-check-transfer="${escapeHtml(result.id_transaccion)}">Consultar estado</button>` : '',
+    ].join('');
     card.className = `yb-receipt-card ${copy.type === 'review' ? 'is-review' : ''} ${copy.type === 'rejected' ? 'is-rejected' : ''}`.trim();
-    card.innerHTML = `<div class="yb-receipt-head"><span class="yb-receipt-mark" aria-hidden="true">${copy.mark}</span><div><h2>${copy.title}</h2><p>${escapeHtml(result?.mensaje || copy.detail)}</p></div></div><div class="yb-receipt-amount">${escapeHtml(formatMoney(result?.monto_cop))}</div><div class="yb-receipt-meta"><span>Destino<strong>${escapeHtml(destination || 'Cuenta Yuma')}</strong></span><span>Referencia<strong>${escapeHtml(result?.id_transaccion || '—')}</strong></span><span>Estado<strong>${escapeHtml(result?.estado || '—').replaceAll('_', ' ')}</strong></span><span>Fecha<strong>${escapeHtml(formatDate(result?.creada_utc))}</strong></span></div>${canCheck ? `<div class="yb-receipt-actions"><button class="yb-button yb-button-secondary" type="button" data-check-transfer="${escapeHtml(result.id_transaccion)}">Consultar estado</button></div>` : ''}`;
+    card.innerHTML = `<div class="yb-receipt-head"><span class="yb-receipt-mark" aria-hidden="true">${copy.mark}</span><div><h2>${copy.title}</h2><p>${escapeHtml(result?.mensaje || copy.detail)}</p></div></div><div class="yb-receipt-amount">${escapeHtml(formatMoney(result?.monto_cop))}</div><div class="yb-receipt-meta"><span>Destino<strong>${escapeHtml(destination || 'Cuenta Yuma')}</strong></span><span>Referencia<strong>${escapeHtml(result?.id_transaccion || '—')}</strong></span><span>Estado<strong>${escapeHtml(result?.estado || '—').replaceAll('_', ' ')}</strong></span><span>Fecha<strong>${escapeHtml(formatDate(result?.creada_utc))}</strong></span></div>${actions ? `<div class="yb-receipt-actions">${actions}</div>` : ''}`;
+  }
+
+  function reopenTransferVerification() {
+    if (!state.pendingTransfer?.id_verificacion) return;
+    setMessage('transfer-biometric-error');
+    openDialog('transfer-biometric');
   }
 
   async function handleTransferBiometric(resultSimulated) {
@@ -757,6 +770,10 @@
     if (button) setBusy(button, true, 'Consultando…');
     try {
       const result = await api(`/v1/transferencias/${encodeURIComponent(id)}`);
+      if (result?.estado !== 'requiere_verificacion' && state.pendingTransfer?.id_transaccion === id) {
+        state.pendingTransfer = null; // la verificación ya se resolvió o venció (pasó a revisión)
+        sessionStorage.removeItem(accountStorageKey('yuma-wallet-pending-transaction'));
+      }
       renderReceipt(result);
       await loadAccountData();
       if (result?.estado === 'completada' || result?.estado === 'rechazada') showToast(result.estado === 'completada' ? 'La transferencia fue completada.' : 'La transferencia fue rechazada.');
@@ -774,6 +791,7 @@
       document.getElementById('transfer-receipt').hidden = false;
       renderReceipt(result);
       if (result?.estado === 'requiere_verificacion' && pending.id_verificacion) {
+        changePage('transfer'); // el comprobante con «Confirmar que soy yo» vive en la página de envío
         openDialog('transfer-biometric');
       } else if (result?.estado !== 'en_revision') {
         state.pendingTransfer = null;
@@ -839,6 +857,14 @@
       if (transferBio) handleTransferBiometric(transferBio.dataset.transferBiometric);
       const check = event.target.closest('[data-check-transfer]');
       if (check) checkTransfer(check.dataset.checkTransfer);
+      const reopen = event.target.closest('[data-reopen-verification]');
+      if (reopen) reopenTransferVerification();
+    });
+    // Cerrar la verificación (×, Escape o clic fuera) no la cancela: queda pendiente y se puede retomar desde el comprobante.
+    document.getElementById('transfer-biometric').addEventListener('close', () => {
+      if (state.pendingTransfer?.id_verificacion) {
+        showToast('Tu envío sigue pendiente de verificación. Usa «Confirmar que soy yo»; si no confirmas en unos minutos, pasa a revisión.');
+      }
     });
   }
 

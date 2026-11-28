@@ -55,6 +55,50 @@ public class PoliticaDecisionTests
         Assert.Equal(NivelInterno.Verificar, Politica.Decidir(0.80, Ctx(fanin: 5, rep: 0)).Nivel);  // sin p >= retener no se rechaza
     }
 
+    [Theory]
+    [InlineData("Antioquia", false)]
+    [InlineData("Bogotá D.C.", false)]
+    [InlineData("bogota d.c.", false)]   // sin tildes ni mayúsculas
+    [InlineData(" Nariño ", false)]
+    [InlineData("Rusia", true)]
+    [InlineData("Estados Unidos", true)]
+    [InlineData("Otro", true)]
+    [InlineData("", false)]              // desconocida: no se marca
+    [InlineData(null, false)]
+    public void Ubicacion_fuera_de_Colombia(string? departamento, bool fuera) =>
+        Assert.Equal(fuera, UbicacionIp.EsFueraDeColombia(departamento));
+
+    [Fact]
+    public void Salida_con_conexion_fuera_de_Colombia_exige_al_menos_verificar()
+    {
+        ContextoPolitica C(bool fuera, bool transf = true, bool qr = false) =>
+            new(0, 100, false, 0.05, fuera, null, false, EsSalida: transf, EsTransferencia: transf, MontoCop: 20_000, EsPagoQr: qr, IpExtranjera: fuera);
+
+        var r = Politica.Decidir(0.0, C(true));
+        Assert.Equal(NivelInterno.Verificar, r.Nivel);
+        Assert.Equal(PisoSeguridad.IpExtranjera, r.Piso);
+        Assert.Equal(NivelInterno.Verificar, Politica.Decidir(0.0, C(true, transf: false, qr: true)).Nivel); // pago QR también
+        Assert.Equal(NivelInterno.Aprobar, Politica.Decidir(0.0, C(false)).Nivel);                         // misma operación desde Colombia
+        Assert.Equal(NivelInterno.Aprobar, Politica.Decidir(0.0, C(true, transf: false)).Nivel);           // no sale dinero (p. ej. recarga)
+        Assert.Equal(NivelInterno.Retener, Politica.Decidir(0.99, C(true)).Nivel);                          // el piso nunca baja al modelo
+        Assert.False(PoliticaDecision.AbreRevisionPosterior(r, C(true)));                                   // es señal de cuenta: la verificación es el control
+    }
+
+    [Fact]
+    public void Ingreso_desde_fuera_de_Colombia_pide_verificacion_y_con_celular_nuevo_bloquea()
+    {
+        var s = new EscudoYuma.Api.Features.Auth.Login.ScoreIngresoLogin();
+        EscudoYuma.Api.Shared.Estado.ContextoLogin L(string depto, bool celularConocido) =>
+            new(true, celularConocido, 0, 0, false, false, false, depto, "Antioquia", 10, 15);
+
+        var conocido = s.Calcular(L("Rusia", true));
+        Assert.Equal(0.40, conocido.Score, 6);                                 // umbral de verificación
+        Assert.Contains(conocido.Razones, r => r.Contains("fuera de Colombia (Rusia)"));
+        Assert.DoesNotContain(conocido.Razones, r => r.Contains("distinta a la habitual")); // reemplaza a "IP distinta"
+        Assert.Equal(0.70, s.Calcular(L("Rusia", false)).Score, 6);           // + celular no visto = bloqueo temporal
+        Assert.Equal(0.20, s.Calcular(L("Caldas", true)).Score, 6);           // otro departamento de Colombia: solo IP distinta
+    }
+
     [Fact]
     public void Revision_posterior_solo_en_desafiar_sin_senales_de_cuenta_en_transferencia_o_qr()
     {

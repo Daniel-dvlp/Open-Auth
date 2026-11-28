@@ -61,22 +61,24 @@ public readonly record struct ContextoPolitica(
     double FanInDestino, double ReputacionDestino, bool DestinoNuevo, double MontoSobreSaldo,
     bool SenalesDeCuenta, double? ScoreIngreso, bool CuentaBloqueada,
     bool DispositivoNuevo = false, bool CambioSimOClave = false, bool EsSalida = false, bool EsTransferencia = false, double MontoCop = 0,
-    bool EsPagoQr = false)
+    bool EsPagoQr = false, bool IpExtranjera = false)
 {
     /// <param name="scoreIngreso">Score de ingreso vigente de la sesión (null si no hay). NO es atributo del modelo.</param>
-    public static ContextoPolitica Desde(AtributosTransaccion a, double? scoreIngreso, bool cuentaBloqueada) => new(
+    /// <param name="ipExtranjera">Conexión fuera de Colombia (<see cref="UbicacionIp"/>). NO es atributo del modelo.</param>
+    public static ContextoPolitica Desde(AtributosTransaccion a, double? scoreIngreso, bool cuentaBloqueada, bool ipExtranjera = false) => new(
         a["fanin_destino_7d"], a["reputacion_destino"], a["destino_nuevo"] == 1, a["monto_sobre_saldo"],
-        // señales de toma de cuenta / SIM swapping: dispositivo, SIM, clave o intentos fallidos de ingreso
-        a["dispositivo_nuevo"] == 1 || a["dispositivo_visto_antes"] == 0 || a["cambio_sim_48h"] == 1 || a["cambio_clave_24h"] == 1 || a["login_fallidos_24h"] > 0,
+        // señales de toma de cuenta / SIM swapping: dispositivo, SIM, clave, intentos fallidos de ingreso o conexión desde el exterior
+        a["dispositivo_nuevo"] == 1 || a["dispositivo_visto_antes"] == 0 || a["cambio_sim_48h"] == 1 || a["cambio_clave_24h"] == 1 || a["login_fallidos_24h"] > 0
+            || ipExtranjera,
         scoreIngreso, cuentaBloqueada,
         // señales de la PROPIA transacción para el piso de reglas de seguridad (no dependen del feed de eventos)
         a["dispositivo_nuevo"] == 1, a["cambio_sim_48h"] == 1 || a["cambio_clave_24h"] == 1,
         a["op_transferencia_inmediata"] == 1 || a["op_retiro_corresponsal"] == 1 || a["op_retiro_cajero"] == 1,
-        a["op_transferencia_inmediata"] == 1, a["monto_cop"], a["op_pago_qr"] == 1);
+        a["op_transferencia_inmediata"] == 1, a["monto_cop"], a["op_pago_qr"] == 1, ipExtranjera);
 }
 
 /// <summary>Regla de seguridad que elevó la decisión del modelo (Ninguno = el piso no cambió nada).</summary>
-public enum PisoSeguridad { Ninguno, DispositivoSimClave, DispositivoSimClaveVaciado, Vaciado, DestinoReputacionBaja }
+public enum PisoSeguridad { Ninguno, DispositivoSimClave, DispositivoSimClaveVaciado, Vaciado, DestinoReputacionBaja, IpExtranjera }
 
 public readonly record struct ResultadoPolitica(NivelInterno Nivel, bool EscaladaPorIngreso, PisoSeguridad Piso = PisoSeguridad.Ninguno);
 
@@ -96,7 +98,8 @@ public sealed class PoliticaDecision(UmbralesDecision umbrales)
     ///   A) dispositivo nuevo Y (cambio de SIM O de clave) Y salida                     -> al menos desafiar (verificar);
     ///      y además monto &gt;= 90 % del saldo Y destino nuevo                           -> al menos retener (a un analista; no bloquea la cuenta);
     ///   B) vaciado (transferencia, destino nuevo, monto &gt;= 90 % del saldo y &gt;= 100.000) -> al menos desafiar (advertir);
-    ///   C) reputación del destino &lt;= 30 Y fan-in &gt;= 3                                -> al menos desafiar (verificar).
+    ///   C) reputación del destino &lt;= 30 Y fan-in &gt;= 3                                -> al menos desafiar (verificar);
+    ///   D) salida o pago QR con la conexión fuera de Colombia (extensión .NET)          -> al menos desafiar (verificar).
     /// Solo SUBE la decisión del modelo (se compara por decisión del contrato: aprobar &lt; desafiar &lt; retener &lt; rechazar).
     /// </summary>
     public ResultadoPolitica Decidir(double p, ContextoPolitica c)
@@ -120,6 +123,9 @@ public sealed class PoliticaDecision(UmbralesDecision umbrales)
         var a = c.DispositivoNuevo && c.CambioSimOClave && c.EsSalida;
         if (a && vaciadoANuevo) return (NivelInterno.Retener, PisoSeguridad.DispositivoSimClaveVaciado);
         if (a) return (NivelInterno.Verificar, PisoSeguridad.DispositivoSimClave);
+        // Extensión de .NET (no está en politica.py: los datos del caso solo traen departamentos colombianos, así que no cambia sus métricas):
+        // dinero que sale (transferencia, retiro o pago QR) con la conexión fuera de Colombia -> al menos verificar (biometría del titular).
+        if (c.IpExtranjera && (c.EsSalida || c.EsPagoQr)) return (NivelInterno.Verificar, PisoSeguridad.IpExtranjera);
         if (c.EsTransferencia && vaciadoANuevo && c.MontoCop >= u.PisoMontoVaciadoMin) return (NivelInterno.Advertir, PisoSeguridad.Vaciado);
         if (c.ReputacionDestino <= u.PisoReputacionMax && c.FanInDestino >= u.PisoFanInMin) return (NivelInterno.Verificar, PisoSeguridad.DestinoReputacionBaja);
         return (NivelInterno.Aprobar, PisoSeguridad.Ninguno);
@@ -145,6 +151,7 @@ public sealed class PoliticaDecision(UmbralesDecision umbrales)
         PisoSeguridad.DispositivoSimClaveVaciado => "Regla de seguridad: dispositivo nuevo con cambio de SIM o de clave y casi todo el saldo hacia un destino nuevo; pasa a un analista.",
         PisoSeguridad.Vaciado => "Regla de seguridad: transferencia que vacía el saldo hacia un destino nuevo (posible ingeniería social).",
         PisoSeguridad.DestinoReputacionBaja => "Regla de seguridad: el destino recibe de muchos remitentes distintos y tiene reputación baja.",
+        PisoSeguridad.IpExtranjera => "Regla de seguridad: el dinero sale con una conexión desde fuera de Colombia; se verifica que sea el titular.",
         _ => "",
     };
 

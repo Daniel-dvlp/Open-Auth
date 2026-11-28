@@ -85,7 +85,7 @@ public sealed class ManejadorEvaluarTransaccion(
         //    este pipeline NUNCA crea ese bloqueo. El score de ingreso de la sesión NO es atributo del modelo: solo escala la política.
         var bloqueada = bloqueos.Contiene(tx.IdCliente);
         var scoreIngreso = estado.ScoreIngresoVigente(tx.IdCliente, ahoraUtc, TimeSpan.FromMinutes(politica.Umbrales.VigenciaScoreIngresoMin));
-        var ctxPolitica = ContextoPolitica.Desde(attrs, scoreIngreso, bloqueada);
+        var ctxPolitica = ContextoPolitica.Desde(attrs, scoreIngreso, bloqueada, UbicacionIp.EsFueraDeColombia(tx.DepartamentoIp));
         var res = politica.Decidir(p, ctxPolitica);
         var nivel = res.Nivel;
         var revisionPosterior = PoliticaDecision.AbreRevisionPosterior(res, ctxPolitica);
