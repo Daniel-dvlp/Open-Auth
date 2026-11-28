@@ -344,6 +344,10 @@ function renderQueue() {
     const matchesSearch = !search || [item.id_transaccion, item.id_cliente, item.id].some(value => String(value || '').toLowerCase().includes(search));
     return matchesDecision && matchesSearch;
   });
+  // Por defecto, del más nuevo al más antiguo. "Prioridad" conserva el orden del Escudo (riesgo × monto).
+  if (($('#order-filter')?.value || 'recientes') === 'recientes') {
+    state.filtered.sort((a, b) => new Date(b.creada_utc || 0) - new Date(a.creada_utc || 0));
+  }
   updateMetrics();
   if (!state.filtered.length) {
     const emptyTitle = state.alerts.length ? 'No hay coincidencias' : state.view === 'pendiente' ? 'La cola está despejada' : 'Aún no hay casos resueltos';
@@ -798,6 +802,7 @@ $('#refresh-button').addEventListener('click', () => loadAlerts());
 $('#reload-button').addEventListener('click', () => loadAlerts());
 $('#search-input').addEventListener('input', renderQueue);
 $('#decision-filter').addEventListener('change', renderQueue);
+$('#order-filter').addEventListener('change', () => { state.selectedId = null; renderQueue(); });
 $('#show-more-button').addEventListener('click', () => { state.visibleCount += 10; renderQueue(); });
 $('#profile-button').addEventListener('click', signOut);
 $('#resolution-form').addEventListener('submit', submitResolution);
